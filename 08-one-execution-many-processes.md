@@ -18,7 +18,7 @@ flowchart LR
 
 ## The run object decides where execution lives
 
-`WorkflowRunner` acts as the switchboard in `packages/cli/src/workflow-runner.ts`. It chooses between in-process execution and queue mode based on the configured execution mode and the kind of run it receives. In queue mode, it sends a small execution envelope to Bull over Redis, not to BullMQ.
+`WorkflowRunner` acts as the switchboard in `packages/cli/src/workflow-runner.ts`. It chooses between in-process execution and queue mode based on the configured execution mode and the kind of run it receives. The scaling layer uses one Bull queue and one execution job type, and Bull over Redis carries the job envelope, not BullMQ.
 
 The queue job carries only the information needed to find the real execution record again: execution ID, workflow ID, and a small set of execution flags. `packages/cli/src/scaling/job-processor.ts` then reloads the execution row from the database, refreshes workflow static data when the job asks for it, rebuilds the workflow object, and runs the engine from that stored state. The worker talks back through Bull progress messages, and the main or webhook process uses those messages for completion, streamed chunks, and webhook responses.
 
@@ -32,7 +32,7 @@ For deployment and sizing guidance, use the official [queue-mode hosting guide](
 
 `packages/cli/src/commands/webhook.ts` starts the webhook process. In queue mode it intercepts production webhook traffic, initializes the webhook server, and hands incoming work into the same execution pipeline that `WorkflowRunner` uses everywhere else.
 
-`packages/cli/src/scaling/multi-main-setup.ee.ts` adds a leader-election layer for multi-main deployments. As of this code, the module lives in an enterprise-licensed file. It keeps singleton duties on the leader, steps followers down when leadership changes, and lets followers take over later without changing the execution model.
+`packages/cli/src/scaling/multi-main-setup.ee.ts` adds a leader-election layer for multi-main deployments. As of this code, the module sits in an enterprise-licensed `.ee.ts` file. It keeps singleton duties on the leader, steps followers down when leadership changes, and lets followers take over later without changing the execution model.
 
 ## Waiting keeps the same execution alive
 
@@ -46,13 +46,13 @@ The additional data object also exposes `webhookWaitingBaseUrl`, the waiting-web
 
 `packages/cli/src/workflow-execute-additional-data.ts::executeWorkflow` starts a child execution with its own execution record, its own run data, and its own lifecycle hooks. `parentExecution` metadata links the two sides, but the child still behaves like a separate execution boundary. The caller can continue immediately through `doNotWaitToFinish`, or it can wait for the child result and continue only after that result returns.
 
-The helper loads draft workflow data for manual and chat runs, and published workflow data for production runs. That split lets an engineer iterate on a child workflow during interactive work without publishing it first, while production still uses the active version. Item lineage narrows at the boundary: the parent receives the returned output items, not the child’s full internal `pairedItem` history. See [Items, runs, and `pairedItem`](/05-items-runs-and-paireditem.md) for that limitation.
+Manual and chat runs load draft workflow data. Production runs load published workflow data. That split lets an engineer iterate on a child workflow during interactive work without publishing it first, while production still uses the active version. Item lineage narrows at the boundary: the parent receives the returned output items, not the child’s full internal `pairedItem` history. See [Items, runs, and `pairedItem`](/05-items-runs-and-paireditem.md) for that limitation.
 
 ## Error workflows spawn a separate run
 
-`packages/cli/src/workflows/workflow-execution.service.ts::executeErrorWorkflow` does not resume the failed parent. It loads the active or published version of the error workflow, checks the sub-workflow policy, and then starts a brand-new error-workflow execution with a single error item whose JSON body contains `workflowErrorData`.
+`packages/cli/src/workflows/workflow-execution.service.ts::executeErrorWorkflow` does not resume the failed parent. It loads the active or published version of the error workflow, checks the sub-workflow policy, and then starts a brand-new error-workflow execution with a single error item (`json: workflowErrorData`).
 
-The failed parent sets `shouldResume` to `false`, so the error workflow stays separate from the original workflow run. That boundary matters for item lineage as well: the error workflow gets a fresh execution story, not a normal branch continuation.
+The failed parent sets `shouldResume` to `false`, so the error workflow stays separate from the original workflow run. That boundary matters for item lineage as well: the error workflow gets a separate execution record, not a continuation of the failed branch.
 
 ## Two concurrency controls
 
