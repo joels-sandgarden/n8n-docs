@@ -30,13 +30,13 @@ Flipping a workflow active does not run the whole graph. `ActiveWorkflowManager`
 
 The manager treats activation as an all-or-nothing step. If one start mechanic fails after another one already came up, it tears down the partial state, removes the active version, and records the failure. When the error looks transient, it queues another activation attempt; when the error points to authorization, it stops retrying.
 
-In queue or multi-main setups, the leader owns the in-memory listeners and cron schedules. Other instances still keep the stored webhook rows, so request handling can continue through the shared webhook lookup and execution path.
+In queue or multi-main mode, the leader owns the in-memory listeners and cron schedules. Other instances still keep the stored webhook rows, so request handling can continue through the shared webhook lookup and execution path.
 
 ## Manual runs and production runs
 
-The editor uses temporary registrations for test runs. `TestWebhooks` creates a short-lived test webhook, stores it through `WebhookService.createWebhookIfNotExists(..., 'manual', 'manual')`, and removes it after the first hit or when the timeout expires. The cancel endpoint tears down the same temporary state if the editor closes the test session early.
+The editor uses temporary registrations for test runs. `TestWebhooks` creates a short-lived test webhook, registers it with `WebhookService.createWebhookIfNotExists(..., 'manual', 'manual')`, and removes it after the first hit or when the timeout expires. The cancel endpoint tears down the same temporary state if the editor closes the test session early.
 
-Manual execution also changes how the runtime treats the trigger node. `WorkflowExecute.executeTriggerNode()` runs `trigger()` in `mode: 'manual'`, waits for the one-shot `manualTriggerResponse`, and returns the first emitted items to the run loop. `WorkflowExecute.executePollNode()` follows the same split: manual mode runs the poll function directly, while non-manual modes reuse the data that activation already collected.
+Manual execution also changes how the runtime treats the trigger node. `WorkflowExecute.executeTriggerNode()` runs `trigger()` in `mode: 'manual'`, waits for the single-use `manualTriggerResponse`, and returns the first emitted items to the run loop. `WorkflowExecute.executePollNode()` follows the same split: manual mode runs the poll function directly, while non-manual modes reuse the data that activation already collected.
 
 Production activation takes the opposite path. The runtime stores persistent webhook rows, registers live listeners only on the leader, and runs the workflow in `mode: 'trigger'` or `mode: 'webhook'` when a real event arrives. When the editor has no live event to listen for, pinned data fills the initial run data so the canvas can still continue the flow.
 
@@ -50,7 +50,7 @@ Webhook definitions start in node metadata. `WebhookService.getNodeWebhooks()` e
 
 ## From first item to execution
 
-After the start mechanic fires, the payload becomes the first item in the run stack. `WorkflowExecute.run()` seeds `nodeExecutionStack` from the selected start node and `triggerToStartFrom.data`, then `runNode()` chooses the trigger, poll, webhook, or normal branch. `TriggerExecutionContextFactory` saves static data before it hands the payload to the workflow runner, and it emits `workflow-executed` after the run receives an execution ID.
+After the start mechanic fires, the payload becomes the first item in the execution stack. `WorkflowExecute.run()` seeds `nodeExecutionStack` from the selected start node and `triggerToStartFrom.data`, then `runNode()` chooses the trigger, poll, webhook, or normal branch. `TriggerExecutionContextFactory` saves static data before it hands the payload to the workflow runner, and it emits `workflow-executed` after the run receives an execution ID.
 
 This handoff matters because the activation layer never executes business logic itself. It only decides which start source owns the first payload and which runtime path turns that payload into the initial execution stack. From there, [Anatomy of an execution](/01-anatomy-of-an-execution.md) takes over.
 
