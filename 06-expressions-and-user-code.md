@@ -41,7 +41,9 @@ Expression evaluation stays inside the AST guards in `expression-sandboxing.ts` 
 
 ## Code node runtime boundary
 
-Code node JavaScript does not run in the main process JavaScript context. n8n asks a task runner for work, the broker matches the task to a runner, and the runner executes the script and streams results back. The CLI can start an internal runner process or connect to an external one, and the broker uses WebSocket heartbeats and drain handling to manage the connection lifecycle.
+Code node JavaScript does not run in the main process JavaScript context. n8n asks a task runner for work, the broker matches the task to a runner, and the runner executes the script and streams results back. The per-item and run-once-for-all-items modes change how many items one runner invocation handles, not which runtime executes the code.
+
+The CLI can start an internal runner process or connect to an external one, and the broker uses WebSocket heartbeats and drain handling to manage the connection lifecycle.
 
 The runner receives only the data it needs together with an execution context that exposes `require`, console access, workflow static data access, RPC helpers, and workflow data proxies. `require-resolver.ts` gates built-in and external module access through allowlists, and secure mode process flags, frozen globals, and Buffer hardening keep the runner isolated from the main process.
 
