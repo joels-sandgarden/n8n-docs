@@ -18,6 +18,10 @@ The codebase changes quickly, so this guide reflects a snapshot rather than a pe
 
 That structure keeps the guide focused. It does not try to cover every file in the repository, and it does not duplicate the public product docs. Instead, it points to the pieces that explain behavior: what starts work, what decides the next step, what preserves data between runs, and where the execution model diverges from the canvas.
 
+Readers can use the map to move from broad concepts to the specific code paths that carry them. That keeps the site practical for debugging and extension work while still framing each topic as part of one system, instead of a list of isolated features.
+
+When a behavior changes, the guide points to the subsystem boundary that moved and the runtime consequence that follows. That lets the page explain why a change matters without turning into a file list, a product tour, or a substitute for the official docs for readers who need the mental model quickly.
+
 ## Table of contents
 
 - [/00-the-big-picture.md](/00-the-big-picture.md) — A map of the whole platform and its major moving parts.
