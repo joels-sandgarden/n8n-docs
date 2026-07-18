@@ -2,7 +2,7 @@
 
 This site is a concept-level field guide to the n8n codebase. It explains how the execution engine behaves, why the main subsystems exist, and how the pieces fit together at runtime.
 
-The guide exists for engineers who run, debug, extend, or embed n8n. It is written for node authors, self-hosters, and anyone investigating execution order, partial execution, expressions, webhooks, or workflows that survive across process boundaries. It aims to give a working mental model of the system, not a product walkthrough or an API reference.
+It serves engineers who run, debug, extend, or embed n8n. Node authors, self-hosters, and anyone investigating execution order, partial execution, expressions, webhooks, or workflows that survive across process boundaries will find the same mental model here. The page gives that model, not a product walkthrough or an API reference.
 
 Doc Holiday wrote this page from direct exploration of the n8n source repository. The guide records the codebase as it existed at the time of generation and keeps the placeholder token `[GENERATED_FROM: commit SHORT_SHA, DATE]` exactly as shown.
 
