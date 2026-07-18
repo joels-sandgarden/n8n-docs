@@ -64,12 +64,12 @@ flowchart LR
 
 ## Process model
 
-The root `package.json` exposes `n8n start`, `n8n worker`, and `n8n webhook`, which together form the main process, the queue worker, and the dedicated webhook processor. `n8n start` boots the main server, while queue mode adds the worker and webhook paths that the queue-backed execution model needs. For deployment guidance, see the official queue mode hosting guide: [Enable queue mode](https://docs.n8n.io/deploy/host-n8n/configure-n8n/scaling/enable-queue-mode).
+The root `package.json` exposes `n8n start`, `n8n worker`, and `n8n webhook`. `n8n start` boots the main server, while queue mode adds the worker and webhook processors that handle queued runs. For deployment guidance, see the official queue mode hosting guide: [Enable queue mode](https://docs.n8n.io/deploy/host-n8n/configure-n8n/scaling/enable-queue-mode).
 
 ## What this guide is not
 
 > **Note**
-> This guide is not a node catalog, not a deep dive into the fast-moving AI areas, and not a full description of the separate `@n8n/engine` scaffold. As of this snapshot, `@n8n/engine` reads as a scaffold rather than the live runtime, so this page stays focused on the engine that actually runs.
+> This guide is not a node catalog, not a deep dive into the fast-moving AI areas, and not a full description of the separate `@n8n/engine` scaffold. As of this snapshot, `@n8n/engine` reads as a scaffold rather than the live runtime.
 
 For broader context, see [How n8n works](https://docs.n8n.io/deploy/host-n8n/understand-the-architecture/how-n8n-works), [Choose a node building style](https://docs.n8n.io/connect/create-nodes/plan-your-node/choose-a-node-building-style), and [Understand n8n's data structure](https://docs.n8n.io/build/work-with-data/understand-n8ns-data-structure).
 
