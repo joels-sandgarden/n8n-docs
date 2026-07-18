@@ -16,7 +16,7 @@ The editor can still summarize that history as counts because it reads stored ex
 
 ## One run, many items — usually
 
-Most nodes process a set of items in a single run. The engine does not treat each item as a separate run by default. `WorkflowExecute.handleExecuteOnce()` narrows `executeOnce` nodes to the first item, and `prepareConnectionInputData()` chooses the input shape that the node actually receives. Some node implementations also use `alwaysOutputData` to return output even when input data runs dry. The Code node reference documents the related run-once modes, which change how the node groups or reuses items. See the official [Code node reference](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.code/).
+Most nodes process a set of items in a single run. The engine does not treat each item as a separate run by default. `WorkflowExecute.handleExecuteOnce()` narrows `executeOnce` nodes to the first item, and `prepareConnectionInputData()` chooses the input shape that the node actually receives. The Code node reference documents the related run-once modes, which change how the node groups or reuses items. See the official [Code node reference](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.code/).
 
 The important point stays simple: the canvas shows a node, but the runtime decides item granularity. A node can consume many items, only one item, or a shaped subset of the input, depending on the node implementation and its execution mode.
 
