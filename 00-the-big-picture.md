@@ -1,6 +1,6 @@
 # The Big Picture
 
-This page maps the whole n8n platform at the architectural level. It answers what runs where, which packages matter, and where to open next when the runtime model needs more depth. For the higher-level official companion, see the [official architecture landing page](https://docs.n8n.io/deploy/host-n8n/understand-the-architecture/how-n8n-works).
+This page maps the whole n8n platform at the architectural level. It answers what runs where, which packages matter, and where to open next when the runtime model needs more depth. For the higher-level official companion, see the official architecture landing page [how n8n works](https://docs.n8n.io/deploy/host-n8n/understand-the-architecture/how-n8n-works).
 
 ## Monorepo shape
 
