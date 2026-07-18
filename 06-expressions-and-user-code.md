@@ -41,24 +41,22 @@ Expression evaluation stays inside the AST guards in `expression-sandboxing.ts` 
 
 ## Code node runtime boundary
 
-Code node JavaScript does not run in the main process JavaScript context. n8n asks a task runner for work, the broker matches the task to a runner, and the runner executes the script and streams results back. The per-item and run-once-for-all-items modes change how many items one runner invocation handles, not which runtime executes the code.
-
-The CLI can start an internal runner process or connect to an external one, and the broker uses WebSocket heartbeats and drain handling to manage the connection lifecycle.
+Code node JavaScript does not run in the main process JavaScript context. n8n asks a task runner for work, the broker matches the task to a runner, and the runner executes the script and streams results back. The CLI can start an internal runner process or connect to an external one, and the broker uses WebSocket heartbeats and drain handling to manage the connection lifecycle.
 
 The runner receives only the data it needs together with an execution context that exposes `require`, console access, workflow static data access, RPC helpers, and workflow data proxies. `require-resolver.ts` gates built-in and external module access through allowlists, and secure mode process flags, frozen globals, and Buffer hardening keep the runner isolated from the main process.
 
 ## Related pages
 
-Use this page with [Items, runs, and paired item](/05-items-runs-and-paireditem.md), [Anatomy of an execution](/01-anatomy-of-an-execution.md), and [The canvas is not the execution](/03-the-canvas-is-not-the-execution.md). These guides cover item lineage, execution timing, and the split between the editor canvas and runtime behavior.
+Use this page with [Items, runs, and paired item](./05-items-runs-and-paireditem.md), [Anatomy of an execution](./01-anatomy-of-an-execution.md), and [The canvas is not the execution](./03-the-canvas-is-not-the-execution.md). These guides cover item lineage, execution timing, and the split between the editor canvas and runtime behavior.
 
 ### Official docs
 
 Reference material:
 
-- [Task runners configuration](https://docs.n8n.io/hosting/configuration/task-runners/)
-- [Code node reference](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.code/)
-- [Item linking](https://docs.n8n.io/data/data-mapping/item-linking/)
-- [Data structure overview](https://docs.n8n.io/data/data-structure/)
+- [Task runners configuration](https://docs.n8n.io/deploy/host-n8n/configure-n8n/set-up-task-runners)
+- [Code node reference](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.code)
+- [Item linking](https://docs.n8n.io/build/work-with-data/reference-data/link-data-items)
+- [Data structure overview](https://docs.n8n.io/build/work-with-data/understand-n8ns-data-structure)
 
 ## Where to look in the code
 
