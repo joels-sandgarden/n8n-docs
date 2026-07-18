@@ -32,7 +32,7 @@ In queue mode, `WorkflowRunner` hands the job to `ScalingService` in `packages/c
 
 ## What this guide is not
 
-This page is not a node catalog, not API reference, and not a deep dive into the AI packages still in active development in `packages/cli/package.json`. It maps the stable platform shape and stops there.
+This page is not a node catalog, not API reference, and not a deep dive into the AI packages still in active development in `packages/cli/package.json` (`@n8n/instance-ai` and `@n8n/nodes-langchain`). A separate `@n8n/engine` scaffold was not verified in the explored source, so it stays out of the main story. It maps the stable platform shape and stops there.
 
 ## Platform map
 
