@@ -22,7 +22,7 @@ flowchart LR
 
 The queue job carries only the information needed to find the real execution record again: execution ID, workflow ID, and a small set of execution flags. `packages/cli/src/scaling/job-processor.ts` then reloads the execution row from the database, refreshes workflow static data when the job asks for it, rebuilds the workflow object, and runs the engine from that stored state. The worker talks back through Bull progress messages, and the main or webhook process uses those messages for completion, streamed chunks, and webhook responses.
 
-For deployment and sizing guidance, use the official [queue-mode hosting guide](https://docs.n8n.io/hosting/scaling/queue-mode/). That guide covers operational choices; this page only describes the runtime shape.
+For deployment and sizing guidance, use the official [queue-mode hosting guide](https://docs.n8n.io/deploy/host-n8n/configure-n8n/scaling/enable-queue-mode). That guide covers operational choices; this page only describes the runtime shape.
 
 ## The process roles
 
