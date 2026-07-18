@@ -1,0 +1,59 @@
+# Items, Runs, and `pairedItem`
+
+This page explains n8n's execution data model in three layers: the item, the run, and the execution object. It focuses on the mental model that ties the engine to the editor and to item lineage across a workflow.
+
+## Level one: the item
+
+An execution item is `INodeExecutionData`, usually shaped like `{ json, binary?, pairedItem?, metadata?, evaluationData?, ... }`. Nodes receive and return arrays of items on each input and each output, so the item is the unit of data that moves through the graph. For the public item structure and authoring rules, see [Understand n8n's data structure](https://docs.n8n.io/build/work-with-data/understand-n8ns-data-structure) and [Link data items](https://docs.n8n.io/build/work-with-data/reference-data/link-data-items).
+
+Inside a run, the engine stores connection data in `ITaskDataConnections`. It groups item arrays first by connection type, then by input index, and then by the actual item arrays. `NodeConnectionTypes.Main` covers the main path, while the AI connection types cover the agent and tool paths.
+
+## Level two: the run
+
+Each node execution appends one `ITaskData` entry to `resultData.runData[nodeName]`, and the array index becomes the `runIndex`. `ITaskData` records the node's input source, output data, timing, status, metadata, and error state. The `source` field carries `ISourceData`, which points back to the previous node, output, and run that supplied the input.
+
+```text
+IRunExecutionData
+  resultData
+    runData
+      [nodeName]
+        [runIndex] -> ITaskData
+```
+
+`executionIndex` orders node runs across the whole execution, so it answers a different question from `runIndex`. `runIndex` tells the editor which entry in `runData[nodeName]` it is looking at; `executionIndex` tells the engine when that run happened relative to every other node run. The run picker and item count badges in the editor are both projections of this array history.
+
+A node can accumulate multiple runs for ordinary reasons: a loop can visit it again, a join can wait for a second round of input, or a waiting execution can resume and run the node again. `WorkflowExecute` writes each finished `ITaskData` entry into `resultData.runData[nodeName]`, then updates the timing, status, source, and metadata that describe that run.
+
+## Level three: the execution object
+
+`IRunExecutionData` bundles `startData`, `resultData`, and `executionData`. `startData` captures what the run requested at launch. `resultData` holds `runData`, `pinData`, `lastNodeExecuted`, and `error`. `executionData` carries the live scheduling state: `nodeExecutionStack`, `waitingExecution`, `waitingExecutionSource`, `contextData`, `runtimeData`, and the per-run metadata that the engine still has to merge back into the finished result.
+
+`createRunExecutionData` builds the object, and `run-execution-data.ts` migrates older stored records into the current shape. As of July 2026, the persisted format carries its own `version` field, and that field stays separate from `workflow.settings.executionOrder`. The versioned files in `run-execution-data.v0.ts` and `run-execution-data.v1.ts` show the on-disk schema that the migration layer reads.
+
+Because this object carries both the result and the live machine state, n8n can hand an execution to a queue worker, pause it while a node waits, and resume it later with the same history intact. For the broader execution model, see [Types of executions](https://docs.n8n.io/build/understand-workflows/understand-executions/types-of-executions).
+
+## pairedItem lineage and failure modes
+
+`pairedItem` records lineage, not magic. An output item points back to one input item, to one input plus one input array position, or to a list of those links, and the engine normalizes those links as items move through the workflow. For the item-linking rules and the general expression model, see [Link data items](https://docs.n8n.io/build/work-with-data/reference-data/link-data-items), [How items link through workflows](https://docs.n8n.io/build/work-with-data/reference-data/link-data-items/how-items-link-through-workflows), and [Expressions and user code](/06-expressions-and-user-code.md).
+
+`WorkflowDataProxy` resolves those links and raises the real failure behind each broken lookup:
+
+- **Upstream node did not declare lineage.** The user sees a paired-item lookup failure that says the data is unavailable. Mechanically, the upstream item never carried `pairedItem`, which often happens in custom Code output.
+- **No connection path back to the referenced node.** The user sees a message about no path back to the node. Mechanically, the ancestry chain does not include a valid route to that node.
+- **Multiple matches appear while tracing back.** The user sees a multiple-matches error. Mechanically, more than one ancestry branch resolves to different items for the same lookup.
+- **Pinned data breaks the chain in manual execution.** The user sees a prompt to unpin the node. Mechanically, pinned items short-circuit the ancestry chain that `WorkflowDataProxy` expects.
+- **The requested item index does not exist upstream.** The user sees an invalid index error. Mechanically, the lookup asks for an item number beyond the upstream output count.
+- **Intermediate nodes have not executed yet.** The user sees a can-not-get-data error that points at missing intermediate execution. Mechanically, the ancestry chain passes through nodes that still lack run data.
+
+## Canvas relationship
+
+The editor canvas projects this execution model rather than storing a second copy of it. The run picker, item counts, and input and output panels all read from `runData`, so the canvas shows the execution history instead of inventing separate state. For that distinction, see [The canvas is not the execution](/03-the-canvas-is-not-the-execution.md).
+
+## Where to look in the code
+
+- `packages/workflow/src/interfaces.ts` — item shape, connection types, run data, waiting state, and the execution vocabulary.
+- `packages/workflow/src/run-execution-data/run-execution-data.ts` — persisted execution versioning and migration into the current schema.
+- `packages/workflow/src/run-execution-data/run-execution-data.v0.ts` and `run-execution-data.v1.ts` — the stored execution layouts that the migration layer supports.
+- `packages/workflow/src/run-execution-data-factory.ts` — the factory that builds complete or minimal execution objects.
+- `packages/core/src/execution-engine/workflow-execute.ts` — the engine that creates run data, appends task results, records waiting state, and rewrites paired-item links.
+- `packages/workflow/src/workflow-data-proxy.ts` — the lineage resolver that turns paired items into concrete upstream data or a user-facing error.
