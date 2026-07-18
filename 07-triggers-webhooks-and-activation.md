@@ -4,17 +4,17 @@ Workflow activation ties the editor's start signals to the runtime that turns th
 
 Related pages:
 
-- [The big picture](/00-the-big-picture.md)
-- [Anatomy of an execution](/01-anatomy-of-an-execution.md)
-- [The canvas is not the execution](/03-the-canvas-is-not-the-execution.md)
-- [Partial executions and dirty nodes](/04-partial-executions-and-dirty-nodes.md)
-- [One execution, many processes](/08-one-execution-many-processes.md)
+- [The big picture](./00-the-big-picture.md)
+- [Anatomy of an execution](./01-anatomy-of-an-execution.md)
+- [The canvas is not the execution](./03-the-canvas-is-not-the-execution.md)
+- [Partial executions and dirty nodes](./04-partial-executions-and-dirty-nodes.md)
+- [One execution, many processes](./08-one-execution-many-processes.md)
 
 Official docs:
 
-- [Wait node usage page](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.wait/#on-webhook-call)
-- [manual-vs-production executions page](https://docs.n8n.io/flow-logic/executions/)
-- [queue mode hosting guide](https://docs.n8n.io/hosting/scaling/queue-mode/)
+- [Wait node usage page](https://docs.n8n.io/build/flow-logic/wait)
+- [manual-vs-production executions page](https://docs.n8n.io/build/understand-workflows/understand-executions/types-of-executions)
+- [queue mode hosting guide](https://docs.n8n.io/deploy/host-n8n/configure-n8n/scaling/enable-queue-mode)
 
 ## The three start mechanics
 
