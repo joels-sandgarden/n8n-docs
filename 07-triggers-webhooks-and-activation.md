@@ -1,6 +1,6 @@
 # Triggers, Webhooks, and Activation
 
-Workflow activation connects the editor's start signals to the runtime that actually executes nodes. This page explains how the code starts workflows through active triggers, pollers, and webhooks, and why the editor uses a different path from production.
+Workflow activation ties the editor's start signals to the runtime that turns them into executions. It covers the three start paths in this codebase: active triggers, pollers, and webhooks, and it shows why the editor uses a different path from production.
 
 Related pages:
 
@@ -26,7 +26,7 @@ Webhooks wait for HTTP requests. `WebhookService` derives webhook definitions fr
 
 ## What activation changes
 
-Flipping a workflow active does not execute the whole graph. `ActiveWorkflowManager` loads active workflows when the process starts and again when leadership changes, then registers the matching start mechanics for each active version. Webhook rows go into storage, while trigger listeners and poll schedules live in memory on the leader only.
+Flipping a workflow active does not run the whole graph. `ActiveWorkflowManager` loads active workflows when the process starts and again when leadership changes, then registers the matching start mechanics for each active version. Webhook rows go into storage, while trigger listeners and poll schedules live in memory on the leader only.
 
 The manager treats activation as an all-or-nothing step. If one start mechanic fails after another one already came up, it tears down the partial state, removes the active version, and records the failure. When the error looks transient, it queues another activation attempt; when the error points to authorization, it stops retrying.
 
@@ -34,7 +34,7 @@ In queue or multi-main setups, the leader owns the in-memory listeners and cron 
 
 ## Manual runs and production runs
 
-The editor uses temporary registrations for test runs. `TestWebhooks` creates a short-lived test webhook, registers it through `WebhookService.createWebhookIfNotExists(..., 'manual', 'manual')`, and removes it after the first hit or when the timeout expires. The cancel endpoint tears down the same temporary state if the editor closes the test session early.
+The editor uses temporary registrations for test runs. `TestWebhooks` creates a short-lived test webhook, stores it through `WebhookService.createWebhookIfNotExists(..., 'manual', 'manual')`, and removes it after the first hit or when the timeout expires. The cancel endpoint tears down the same temporary state if the editor closes the test session early.
 
 Manual execution also changes how the runtime treats the trigger node. `WorkflowExecute.executeTriggerNode()` runs `trigger()` in `mode: 'manual'`, waits for the one-shot `manualTriggerResponse`, and returns the first emitted items to the run loop. `WorkflowExecute.executePollNode()` follows the same split: manual mode runs the poll function directly, while non-manual modes reuse the data that activation already collected.
 
@@ -50,7 +50,7 @@ Webhook definitions start in node metadata. `WebhookService.getNodeWebhooks()` e
 
 ## From first item to execution
 
-After the start mechanic fires, the emitted payload becomes the first item that `WorkflowExecute` sees. `WorkflowExecute.run()` seeds `nodeExecutionStack` from the selected start node and `triggerToStartFrom.data`, then `runNode()` routes the first node through the trigger, poll, webhook, or normal execution branch. `TriggerExecutionContextFactory` saves static data before it hands the payload to the workflow runner, and it emits `workflow-executed` after the run receives an execution ID.
+After the start mechanic fires, the payload becomes the first item in the run stack. `WorkflowExecute.run()` seeds `nodeExecutionStack` from the selected start node and `triggerToStartFrom.data`, then `runNode()` chooses the trigger, poll, webhook, or normal branch. `TriggerExecutionContextFactory` saves static data before it hands the payload to the workflow runner, and it emits `workflow-executed` after the run receives an execution ID.
 
 This handoff matters because the activation layer never executes business logic itself. It only decides which start source owns the first payload and which runtime path turns that payload into the initial execution stack. From there, [Anatomy of an execution](/01-anatomy-of-an-execution.md) takes over.
 
