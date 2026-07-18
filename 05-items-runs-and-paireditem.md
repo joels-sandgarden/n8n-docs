@@ -10,7 +10,7 @@ Inside a run, the engine stores connection data in `ITaskDataConnections`. It gr
 
 ## Level two: the run
 
-Each node execution appends one `ITaskData` entry to `resultData.runData[nodeName]`, and the array index becomes the `runIndex`. `ITaskData` records the node's input source, output data, timing, status, metadata, and error state. The `source` field carries `ISourceData`, which points back to the previous node, output, and run that supplied the input.
+Each node execution appends one `ITaskData` entry to `resultData.runData[nodeName]`; the array index becomes the `runIndex`. `ITaskData` records the input source, output data, timing, status, metadata, and error state for that run. `source` carries `ISourceData`, which points back to the previous node, output, and run that supplied the input.
 
 ```text
 IRunExecutionData
@@ -20,9 +20,9 @@ IRunExecutionData
         [runIndex] -> ITaskData
 ```
 
-`executionIndex` orders node runs across the whole execution, so it answers a different question from `runIndex`. `runIndex` tells the editor which entry in `runData[nodeName]` it is looking at; `executionIndex` tells the engine when that run happened relative to every other node run. The run picker and item count badges in the editor are both projections of this array history.
+`executionIndex` orders node runs across the whole execution, so it answers a different question from `runIndex`. `runIndex` tells the editor which entry in `runData[nodeName]` it is looking at; `executionIndex` tells the engine when that run happened relative to every other node run. The run picker and item count badges are projections of this array history, not separate state.
 
-A node can accumulate multiple runs for ordinary reasons: a loop can visit it again, a join can wait for a second round of input, or a waiting execution can resume and run the node again. `WorkflowExecute` writes each finished `ITaskData` entry into `resultData.runData[nodeName]`, then updates the timing, status, source, and metadata that describe that run.
+A node can accumulate multiple runs for ordinary reasons: a loop can visit it again, a join can wait for a second round of input, or a waiting execution can resume and run the node again. `WorkflowExecute` writes each finished `ITaskData` entry into `resultData.runData[nodeName]` and updates the timing, status, source, and metadata for that run.
 
 ## Level three: the execution object
 
@@ -30,7 +30,7 @@ A node can accumulate multiple runs for ordinary reasons: a loop can visit it ag
 
 `createRunExecutionData` builds the object, and `run-execution-data.ts` migrates older stored records into the current shape. As of July 2026, the persisted format carries its own `version` field, and that field stays separate from `workflow.settings.executionOrder`. The versioned files in `run-execution-data.v0.ts` and `run-execution-data.v1.ts` show the on-disk schema that the migration layer reads.
 
-Because this object carries both the result and the live machine state, n8n can hand an execution to a queue worker, pause it while a node waits, and resume it later with the same history intact. For the broader execution model, see [Types of executions](https://docs.n8n.io/build/understand-workflows/understand-executions/types-of-executions).
+The same object carries both the result and the live machine state, so n8n can hand an execution to a queue worker, pause it while a node waits, and resume it later with the same history intact. For the broader execution model, see [Types of executions](https://docs.n8n.io/build/understand-workflows/understand-executions/types-of-executions).
 
 ## pairedItem lineage and failure modes
 
