@@ -30,7 +30,7 @@ A node can accumulate multiple runs for ordinary reasons: a loop can visit it ag
 
 `createRunExecutionData` builds the object, and `run-execution-data.ts` migrates older stored records into the current shape. As of July 2026, the persisted format carries its own `version` field, and that field stays separate from `workflow.settings.executionOrder`. The versioned files in `run-execution-data.v0.ts` and `run-execution-data.v1.ts` show the on-disk schema that the migration layer reads.
 
-The same object carries both the result and the live machine state, so n8n can hand an execution to a queue worker, pause it while a node waits, and resume it later with the same history intact. For the broader execution model, see [Types of executions](https://docs.n8n.io/build/understand-workflows/understand-executions/types-of-executions).
+The same object carries both the result and the live machine state, so n8n can hand an execution to a queue worker, pause it while a node waits, and resume it later with the same history intact. For the queue mode and resume model behind that flow, see [One execution, many processes](/08-one-execution-many-processes.md). For the broader execution model, see [Types of executions](https://docs.n8n.io/build/understand-workflows/understand-executions/types-of-executions).
 
 ## pairedItem lineage and failure modes
 
