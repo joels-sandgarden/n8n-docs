@@ -40,7 +40,7 @@ The Wait node does not start a fresh run. `packages/core/src/execution-engine/wo
 
 `packages/cli/src/wait-tracker.ts` drives that resume loop. The leader main process polls the database for due waiting executions, sets timers for each due record, and calls `WorkflowRunner` when a timer fires. In queue mode, that resumed execution can still move onto a worker, which keeps the waiting path aligned with every other queued path.
 
-The additional data object also exposes `webhookWaitingBaseUrl`, the waiting-webhook surface used by pause-and-resume flows. For the webhook-facing part of that surface, see [Triggers, webhooks, and activation](/07-triggers-webhooks-and-activation.md). For node-level usage details, see the official [Wait node docs](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.wait/).
+The additional data object also exposes `webhookWaitingBaseUrl`, the waiting-webhook surface used by pause-and-resume flows. For the webhook-facing part of that surface, see [Triggers, webhooks, and activation](/07-triggers-webhooks-and-activation.md). For node-level usage details, see the official [Wait node docs](https://docs.n8n.io/build/flow-logic/wait).
 
 ## Sub-workflows create child executions
 
