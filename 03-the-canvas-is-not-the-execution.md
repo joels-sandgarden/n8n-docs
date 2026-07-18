@@ -34,9 +34,9 @@ That split matters because the same disabled node can behave like a passthrough 
 
 ## Pinned nodes never run
 
-Pins look like saved node output, but they act as editor data, not as a production input. `useRunWorkflow.ts` seeds local playback with `pinData` inside `createRunExecutionData()`, and the editor renders the run from that state. The backend run request goes through `workflows.store.ts`, and `fetchExecutionDataById()` later reads the saved execution record back for display. The editor can therefore replay pins, but the server still owns the real run.
+Pins look like saved node output, but they act as editor data, not as a production input. `useRunWorkflow.ts` seeds local playback with `pinData` inside `createRunExecutionData()`, and the editor renders the run from that state. The backend run request passes through `workflows.store.ts`, and `fetchExecutionDataById()` later reads the saved execution record back for display. The editor can therefore replay pins, but the server still owns the real run.
 
-The official [execution types](https://docs.n8n.io/workflows/executions/) docs explain the user-visible difference between manual, partial, and stored executions. That distinction is the reason a pin can affect what the editor shows while leaving production execution unchanged.
+The official [execution types](https://docs.n8n.io/workflows/executions/) docs explain the difference between manual, partial, and stored executions. That distinction is the reason a pin can affect what the editor shows while leaving production execution unchanged.
 
 ## “Execute this node” is not “execute one node”
 
@@ -62,7 +62,7 @@ What appears on the canvas comes from `resultData` and execution data, not from 
 | --- | --- |
 | Wires imply order, position decides it | Read branch order from the engine stack and the sorted start-node payload, not from wire layout alone. |
 | One box, many runs | Treat `runData[nodeName]` as a run history, one array entry per run. |
-| One run, many items — usually | Expect item arrays, but remember `executeOnce` and node-specific run-once modes can narrow them. |
+| One run, many items — usually | Expect item arrays, but remember `executeOnce` and node run-once modes can narrow them. |
 | The loop that isn’t | Treat `SplitInBatches` as stateful handoff across runs, not as a language loop. |
 | Disabled is not deleted | Expect full runs to pass data through and partial runs to strip disabled nodes. |
 | Pinned nodes never run | Treat pins as editor replay data, not as production input. |
@@ -72,7 +72,7 @@ What appears on the canvas comes from `resultData` and execution data, not from 
 
 ## Where to look in the code
 
-- `packages/core/src/execution-engine/workflow-execute.ts` — full and partial execution, disabled-node passthrough, item shaping, and run-data bookkeeping.
+- `packages/core/src/execution-engine/workflow-execute.ts` — full and partial execution, disabled node passthrough, item shaping, and run data bookkeeping.
 - `packages/core/src/execution-engine/partial-execution-utils/filter-disabled-nodes.ts`, `find-start-nodes.ts`, `recreate-node-execution-stack.ts`, `run-data-utils.ts` — partial-run graph cleanup, start-node discovery, stack rebuilding, and execution index tracking.
 - `packages/frontend/editor-ui/src/app/composables/useRunWorkflow.ts` — editor-side payload assembly, start-node sorting, and local execution playback.
 - `packages/frontend/editor-ui/src/app/stores/workflows.store.ts` — run requests and stored execution fetches.
