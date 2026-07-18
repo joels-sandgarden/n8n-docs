@@ -52,7 +52,7 @@ Webhook definitions start in node metadata. `WebhookService.getNodeWebhooks()` e
 
 After the start mechanic fires, the payload becomes the first item in the execution stack. `WorkflowExecute.run()` seeds `nodeExecutionStack` from the selected start node and `triggerToStartFrom.data`, then `runNode()` chooses the trigger, poll, webhook, or normal branch. `TriggerExecutionContextFactory` saves static data before it hands the payload to the workflow runner, and it emits `workflow-executed` after the run receives an execution ID.
 
-This handoff matters because the activation layer never executes business logic itself. It only decides which start source owns the first payload and which runtime path turns that payload into the initial execution stack. From there, [Anatomy of an execution](/01-anatomy-of-an-execution.md) takes over.
+This handoff matters because the activation layer never executes business logic itself. It only decides which start source owns the first payload and which runtime path turns that payload into the initial execution stack. From there, [Anatomy of an execution](./01-anatomy-of-an-execution.md) takes over.
 
 ```mermaid
 flowchart TD
