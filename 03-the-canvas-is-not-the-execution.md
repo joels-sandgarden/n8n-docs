@@ -1,10 +1,10 @@
 # The canvas is not the execution
 
-The canvas projects `IWorkflowBase`. Execution projects `IRunExecutionData`. Those structures share node names and connections, but they answer different questions: one describes the workflow definition, the other records a specific run. The editor draws the definition, while the engine and stored execution data describe what actually happened. See [Anatomy of an execution](/01-anatomy-of-an-execution.md) for the data shape behind that split.
+The canvas projects `IWorkflowBase`. Execution projects `IRunExecutionData`. Those structures share node names and connections, but they answer different questions: one describes the workflow definition, the other records a specific run. The editor draws the definition, while the engine and stored execution records describe what happened. See [Anatomy of an execution](/01-anatomy-of-an-execution.md) for the data shape behind that split.
 
 ## Wires imply order, position decides it
 
-The canvas suggests that wire direction alone determines branch order. The engine does not follow that mental model. In `useRunWorkflow.ts`, `sortNodesByYPosition()` sorts start nodes by canvas Y before the run payload leaves the editor, and `WorkflowExecute.addNodeToBeExecuted()` uses the workflow's execution order setting to decide whether it unshifts or pushes the next node onto the stack. That makes branch order sensitive to the start-node payload, not just to the wires on the screen.
+The canvas suggests that wire direction alone determines branch order. The engine does not follow that mental model. In `useRunWorkflow.ts`, `sortNodesByYPosition()` sorts the start nodes by canvas Y before the payload leaves the editor, and `WorkflowExecute.addNodeToBeExecuted()` uses the workflow's execution order setting to decide whether it unshifts or pushes the next node onto the stack. That makes branch order sensitive to the payload, not just to the wires on the screen.
 
 The result is easy to miss in `executionOrder: 'v1'`: moving a node vertically can change which branch runs first even when the wires stay the same. See [How the engine decides what runs next](/02-how-the-engine-decides-what-runs-next.md) and the official [execution order](https://docs.n8n.io/workflows/executions/execution-order/) docs for the wider rule set.
 
@@ -12,7 +12,7 @@ The result is easy to miss in `executionOrder: 'v1'`: moving a node vertically c
 
 The canvas shows one node box, but the runtime stores many task records for that node. `runData[nodeName]` is an array, and each entry captures one run at a specific execution index. `getNextExecutionIndex()` derives the next index from the stored run data, and `moveNodeMetadata()` merges per-run metadata back into the matching array slot. The box stays singular; the execution history does not.
 
-The editor can still summarize that history as counts, because it reads execution data rather than the canvas alone. `useRunWorkflow.ts` seeds local execution state with `createRunExecutionData({ resultData: { runData, pinData } })`, and `workflows.store.ts` later loads saved execution data through `fetchExecutionDataById()`. For the item-level view of the same structure, see [Items, runs, and pairedItem](/05-items-runs-and-paireditem.md).
+The editor can still summarize that history as counts because it reads stored execution data, not the canvas. `useRunWorkflow.ts` seeds local execution state with `createRunExecutionData({ resultData: { runData, pinData } })`, and `workflows.store.ts` later loads saved execution data through `fetchExecutionDataById()`. For the item level view of the same structure, see [Items, runs, and pairedItem](/05-items-runs-and-paireditem.md).
 
 ## One run, many items — usually
 
@@ -40,9 +40,9 @@ The official [execution types](https://docs.n8n.io/workflows/executions/) docs e
 
 ## “Execute this node” is not “execute one node”
 
-A targeted run does more than start one box. `consolidateRunDataAndStartNodes()` walks backward from the destination, keeps the reusable run data, and marks the nodes that must run again. On the backend, `runPartialWorkflow2()` then filters disabled nodes, finds the subgraph, cleans the run data, finds start nodes, and recreates the execution stack before execution begins. See [Partial executions and dirty nodes](/04-partial-executions-and-dirty-nodes.md) for the dirty-chain model behind that behavior.
+A targeted run does more than start one box. `consolidateRunDataAndStartNodes()` walks backward from the destination, keeps the reusable run data, and marks the nodes that must run again. On the backend, `runPartialWorkflow2()` then filters disabled nodes, finds the subgraph, cleans the run data, finds start nodes, and recreates the execution stack before execution begins. See [Partial executions and dirty nodes](/04-partial-executions-and-dirty-nodes.md) for the dirty chain model behind that behavior.
 
-The practical rule of thumb stays narrow: the editor decides which chain needs replay, and the backend rebuilds that chain from stored data. The target node only looks like the whole story.
+The practical rule stays narrow: the editor decides which chain needs replay, and the backend rebuilds that chain from stored data. The target node only looks like the whole story.
 
 ## Branches can die silently
 
