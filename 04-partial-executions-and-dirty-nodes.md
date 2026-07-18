@@ -1,61 +1,68 @@
 # Partial Executions and Dirty Nodes
 
-## Overview
+Partial execution rebuilds a believable execution state before `WorkflowExecute` resumes its normal loop. It does not replace the engine; it narrows the graph, reconstructs the surviving state, and hands control back to the same loop that full runs use. That makes partial execution a state reconstruction pass in front of the executor, not a separate executor.
 
-Partial execution lets the workflow engine run only the portion of a workflow that changed. It matters because the engine can reuse valid results from earlier runs instead of replaying every node every time.
+## When partial execution happens
 
-Dirty nodes support that behavior. A dirty node marks workflow state whose stored result no longer matches the current upstream state, so the engine knows which downstream work it must rebuild.
+The editor decides whether a run goes full or partial. `useRunWorkflow.ts` only forwards prior `runData` when `destinationNode !== undefined`, and it packages the `dirtyNodeNames` from the editor's `dirtinessByName` map, the chosen `destinationNode`, reusable `startNodes`, pin data, and any agent request context it needs. On the server, `manual-execution.service.ts` sends the request into `runPartialWorkflow2(...)` when `data.destinationNode` and `data.runData` point to a partial rerun. `consolidateRunDataAndStartNodes(...)` keeps reusable branches, returns `startNodeNames`, and trims `runData` so the rerun starts from the smallest safe boundary.
 
-## Mental model
+### `find-trigger-for-partial-execution.ts`
 
-The execution engine treats a workflow as a graph of dependent nodes. When the engine receives a partial execution request, it starts from the selected entry point, follows the dependency graph, and identifies the smallest set of nodes that must run.
+This step chooses the trigger anchor for the rerun. It prefers the trigger that belongs to the selected branch, then walks the workflow history until it finds the anchor that best matches the partial request. That anchor gives the rest of the pipeline a stable starting point.
 
-Nodes outside that path remain clean. Their stored output stays usable because nothing on the path to those nodes changed.
+### `directed-graph.ts` + `filter-disabled-nodes.ts`
 
-Nodes on the affected path become dirty when upstream data changes, when a branch stops early, or when the selected execution slice does not include the work that originally produced them. Dirty status does not mean the node failed. It means the stored result no longer represents the current workflow state.
+Partial execution works on a mutable graph wrapper, not on the raw workflow object. `directed-graph.ts` lets the pruning steps remove and reconnect nodes while they preserve the execution shape, and `filter-disabled-nodes.ts` strips disabled nodes and reconnects only `Main` paths. Full execution can still leave disabled branches present on the canvas, but partial execution removes them because reruns should follow the live runtime path rather than every node the editor displays. See also [03-the-canvas-is-not-the-execution](./03-the-canvas-is-not-the-execution.md).
 
-## Why dirty nodes exist
+### `find-subgraph.ts`
 
-Dirty nodes prevent partial execution from mixing fresh and stale results. Without that distinction, a rerun could reuse output that depends on data the engine already replaced.
+This step cuts the graph down to the branch from the trigger to the destination and then reattaches non-`Main` utility and AI edges that the branch still depends on. The result keeps the real execution slice, not just the visual path between two nodes, so the rerun still sees the support connections that the original execution relied on.
 
-Dirty markers give the engine a simple rule: reuse clean results, recompute dirty ones, and keep the boundary between them explicit. That rule keeps partial runs predictable even when a workflow contains long chains or multiple branches.
+### `find-start-nodes.ts`
 
-## How partial execution flows through the engine
+This step walks forward from trigger to destination and stops at the first dirty node on each branch. The live `isDirty(...)` rule marks a node dirty when it has an error or when it has no run data and no pinned data; pinned data wins and keeps the node clean. The editor can also mark nodes dirty through `dirtyNodeNames`, which gives the UI a direct way to force a rerun boundary. For the user-facing model of that behavior, see [Types of executions](https://docs.n8n.io/build/understand-workflows/understand-executions/types-of-executions) and [Understand dirty nodes](https://docs.n8n.io/build/understand-workflows/understand-executions/understand-dirty-nodes).
 
-`WorkflowExecute.runPartialWorkflow2` drives the current partial execution path. The method coordinates the work of the partial execution helpers in `packages/core/src/execution-engine/partial-execution-utils/` and uses them to decide what to execute next.
+## Dirtiness answers the rerun question
 
-The helpers identify the affected portion of the workflow, track the nodes that depend on changed data, and prepare the execution data that the engine needs for the rerun. The main engine then executes only that slice and leaves the rest of the graph intact.
+Dirty state explains why a node runs again instead of reusing old output. The engine trusts pinned data first, because pin data represents an explicit fixture that should stay stable across partial reruns. If no pin exists and no prior run data survives, the node counts as dirty and the rerun starts there or upstream of there. That rule keeps reuse narrow and predictable, and it avoids mixing fresh work with stale downstream results.
 
-This design keeps partial execution inside the normal workflow engine. The same execution model still applies; partial execution only narrows the part of the graph that the engine considers active.
+## `handle-cycles.ts`
 
-## Design decisions
+Cycles need special handling because a start node inside a loop can strand the rerun inside an unstable part of the graph. `handle-cycles.ts` uses strongly connected component analysis to move that start to the cycle entry, which gives the engine a clean boundary before it re-enters the loop.
 
-### Reuse the main execution engine
+## `clean-run-data.ts` + `recreate-node-execution-stack.ts`
 
-The partial execution path stays inside `WorkflowExecute` instead of branching into a separate runtime. That choice keeps the partial run aligned with the same workflow semantics that full executions use.
+After the graph settles, `clean-run-data.ts` removes old run data at and after the chosen starts and drops data outside the surviving subgraph. `recreate-node-execution-stack.ts` then rebuilds the execution stack and the waiting-input state from the run data that survived pruning and from pin data. From there the normal main loop resumes, and `WorkflowExecute` keeps deciding what runs next; the partial path simply hands it a rebuilt state instead of a cold start. For the surrounding execution model, see [01-anatomy-of-an-execution](./01-anatomy-of-an-execution.md) and [02-how-the-engine-decides-what-runs-next](./02-how-the-engine-decides-what-runs-next.md).
 
-The consequence is consistency. Partial runs and full runs share the same rules for node order, data flow, and execution data.
+## Worked example
 
-### Mark state instead of guessing
+In a five-node chain, node 1 feeds node 2, node 2 feeds node 3, node 3 feeds node 4, and node 4 feeds node 5. If an engineer edits node 4 and then executes node 5, the editor marks node 4 dirty, preserves the clean results from nodes 1 through 3, and asks the server to rebuild state from the first dirty boundary before continuing to node 5. The rerun therefore repeats node 4 and the work downstream of it, while it keeps the earlier branch results that still match the current graph.
 
-The engine marks dirty nodes rather than trying to infer freshness from timing or cache presence alone. That choice makes dependency changes visible and keeps the reuse boundary explicit.
+## Dated note
 
-The consequence is safer reruns. The engine can preserve valid output while still forcing any dependent work to run again.
+As of July 2026, this page describes the live partial-execution-v2 path. A few comments in `workflow-execute.ts` and the helper files still reference the removed v1 implementation, but `runPartialWorkflow2(...)` now carries the live behavior.
 
-### Limit work to the affected slice
+As of July 2026, tool and AI sub-node partial execution follows a special path through `rewire-graph.ts`, which inserts the virtual `tool-executor` node before the normal rerun resumes.
 
-The partial execution utilities focus on the part of the graph that changed. They do not rebuild the entire workflow when a smaller slice is enough.
+## Pipeline
 
-The consequence is lower runtime cost and faster feedback for workflows that only need a narrow rerun.
-
-## Relationship to the rest of the system
-
-Partial execution sits between workflow state and the execution engine. It consumes the workflow graph, the current execution data, and the selected entry point, then returns the subset of work that still needs to run.
-
-The rest of the engine consumes that result as normal execution input. Nothing else in the workflow path needs to know whether the run started as a full execution or a partial one; dirty node tracking already records the boundary.
+```mermaid
+flowchart TD
+  A["workflow + prior runData"] --> B["trigger"]
+  B --> C["graph"]
+  C --> D["subgraph"]
+  D --> E["start nodes"]
+  E --> F["cycle fixup"]
+  F --> G["cleaned runData"]
+  G --> H["rebuilt stack"]
+  H --> I["main loop"]
+```
 
 ## Where to look in the code
 
-- `packages/core/src/execution-engine/workflow-execute.ts` — the main execution entry point and the `runPartialWorkflow2` flow.
-- `packages/core/src/execution-engine/partial-execution-utils/` — helpers that identify the affected slice and prepare partial execution state.
-- `packages/core/src/execution-engine/` — related execution engine code that shows how partial runs fit into the broader runtime.
+- `packages/frontend/editor-ui/src/app/composables/useRunWorkflow.ts` — packages the partial request, including prior `runData`, dirty names, `startNodes`, and `destinationNode`.
+- `packages/cli/src/manual-execution.service.ts` — routes manual runs into `runPartialWorkflow2(...)` when the request carries reusable state.
+- `packages/core/src/execution-engine/workflow-execute.ts` — owns the live partial-execution-v2 pipeline and its step order.
+- `packages/core/src/execution-engine/partial-execution-utils/find-start-nodes.ts` — defines the current dirtiness rule and the first dirty boundary.
+- `packages/core/src/execution-engine/partial-execution-utils/clean-run-data.ts` — removes stale run data before the rebuilt stack takes over.
+- `packages/core/src/execution-engine/partial-execution-utils/rewire-graph.ts` — handles the special tool and AI sub-node path.
