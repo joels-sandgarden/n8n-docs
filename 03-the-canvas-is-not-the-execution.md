@@ -30,7 +30,7 @@ This is why `SplitInBatches` feels stateful across successive runs. The visual p
 
 A disabled node still exists in the workflow definition. The engine only changes how it treats that node. In a full run, `WorkflowExecute.handleDisabledNode()` passes through the first main input so downstream data can keep flowing. In a partial run, `filterDisabledNodes()` removes disabled nodes from the graph and reconnects the main connections before `findSubgraph()` and `recreateNodeExecutionStack()` rebuild the execution path.
 
-That split matters because the same disabled node can behave like a passthrough in a full run and like a removed vertex in a partial run. See [Partial executions and dirty nodes](/04-partial-executions-and-dirty-nodes.md) and the official [dirty nodes and partial executions](https://docs.n8n.io/workflows/executions/partial-executions/) docs.
+That split matters because the same disabled node can behave like a passthrough in a full run and like a removed vertex in a partial run. See [Partial executions and dirty nodes](/04-partial-executions-and-dirty-nodes.md) and the official [dirty nodes](https://docs.n8n.io/build/understand-workflows/understand-executions/understand-dirty-nodes) docs.
 
 ## Pinned nodes never run
 
