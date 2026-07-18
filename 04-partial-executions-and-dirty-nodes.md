@@ -1,6 +1,6 @@
 # Partial Executions and Dirty Nodes
 
-Partial execution rebuilds a believable execution state before `WorkflowExecute` resumes its normal loop. It does not replace the engine; it narrows the graph, reconstructs the surviving state, and hands control back to the same loop that full runs use. That makes partial execution a state reconstruction pass in front of the executor, not a separate executor.
+Partial execution rebuilds state in front of the normal `WorkflowExecute` loop. It does not create a parallel executor; it narrows the graph, reconstructs the surviving state, and hands control back to the same loop that full runs use. That makes partial execution a reconstruction pass rather than a new runtime.
 
 ## When partial execution happens
 
@@ -64,5 +64,5 @@ flowchart TD
 - `packages/cli/src/manual-execution.service.ts` — routes manual runs into `runPartialWorkflow2(...)` when the request carries reusable state.
 - `packages/core/src/execution-engine/workflow-execute.ts` — owns the live partial-execution-v2 pipeline and its step order.
 - `packages/core/src/execution-engine/partial-execution-utils/find-start-nodes.ts` — defines the current dirtiness rule and the first dirty boundary.
-- `packages/core/src/execution-engine/partial-execution-utils/clean-run-data.ts` — removes stale run data before the rebuilt stack takes over.
+- `packages/core/src/execution-engine/partial-execution-utils/clean-run-data.ts` and `packages/core/src/execution-engine/partial-execution-utils/recreate-node-execution-stack.ts` — remove stale run data and rebuild the surviving stack before the main loop resumes.
 - `packages/core/src/execution-engine/partial-execution-utils/rewire-graph.ts` — handles the special tool and AI sub-node path.
