@@ -8,11 +8,11 @@ The editor decides whether a run goes full or partial. `useRunWorkflow.ts` only 
 
 ### `find-trigger-for-partial-execution.ts`
 
-This step picks the trigger anchor in the same order the code uses: the destination trigger comes first when it is enabled, then an enabled parent trigger with run data, then pinned triggers, and then webhook triggers before any other parent trigger. That order keeps the rerun anchored to the closest valid trigger for the partial request.
+This step picks the trigger anchor in the code's preference order: the destination trigger comes first when it is enabled, then an enabled parent trigger with run data, then pinned triggers, and then webhook triggers ahead of any other parent trigger. That order keeps the rerun anchored to the closest valid trigger for the partial request.
 
 ### `directed-graph.ts` + `filter-disabled-nodes.ts`
 
-Partial execution uses `directed-graph.ts` to turn the workflow into a mutable graph, then `filter-disabled-nodes.ts` prunes disabled nodes away and reconnects only `Main` paths. Full execution keeps a broader canvas model, so disabled nodes can still pass data through there; partial execution strips them because the rerun needs the live execution slice, not every node the canvas can show. See also [03-the-canvas-is-not-the-execution](./03-the-canvas-is-not-the-execution.md).
+Partial execution uses `directed-graph.ts` to turn the workflow into a mutable graph, then `filter-disabled-nodes.ts` removes disabled nodes and reconnects only `Main` paths. Full execution keeps the broader canvas model, so disabled nodes can still pass data through there; partial execution strips them because the rerun needs the live execution slice, not the broader canvas view. See also [03-the-canvas-is-not-the-execution](./03-the-canvas-is-not-the-execution.md).
 
 ### `find-subgraph.ts`
 
