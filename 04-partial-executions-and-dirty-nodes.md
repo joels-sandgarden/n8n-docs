@@ -2,13 +2,13 @@
 
 ## Overview
 
-Partial execution lets the workflow engine run only the portion of a workflow that needs new work. It matters because the engine can reuse valid results from earlier runs instead of replaying every node every time.
+Partial execution lets the workflow engine run only the portion of a workflow that changed. It matters because the engine can reuse valid results from earlier runs instead of replaying every node every time.
 
 Dirty nodes support that behavior. A dirty node marks a part of the workflow whose stored result no longer matches the current upstream state, so the engine knows which downstream work it must rebuild.
 
 ## Mental model
 
-The execution engine treats a workflow as a graph of dependent nodes. When the engine receives a partial execution request, it starts from the selected entry point, follows the dependency graph, and identifies the smallest set of nodes that must run to produce correct results.
+The execution engine treats a workflow as a graph of dependent nodes. When the engine receives a partial execution request, it starts from the selected entry point, follows the dependency graph, and identifies the smallest set of nodes that must run.
 
 Nodes outside that path remain clean. Their stored output stays usable because nothing on the path to those nodes changed.
 
@@ -26,7 +26,7 @@ The dirty marker gives the engine a simple rule: reuse clean results, recompute 
 
 The helpers identify the affected portion of the workflow, track the nodes that depend on changed data, and prepare the execution data that the engine needs for the rerun. The main engine then executes only that slice and leaves the rest of the graph intact.
 
-This design keeps partial execution close to the normal workflow engine. The same execution model still applies; partial execution only narrows the part of the graph that the engine considers active.
+This design keeps partial execution inside the normal workflow engine. The same execution model still applies; partial execution only narrows the part of the graph that the engine considers active.
 
 ## Design decisions
 
