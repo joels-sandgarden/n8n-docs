@@ -38,16 +38,16 @@ The same object carries both the result and the live machine state, so n8n can h
 
 `WorkflowDataProxy` resolves those links and raises the real failure behind each broken lookup:
 
-- **Upstream node did not declare lineage.** The user sees a paired-item lookup failure that says the data is unavailable. Mechanically, the upstream item never carried `pairedItem`, which often happens in custom Code output.
-- **No connection path back to the referenced node.** The user sees a message about no path back to the node. Mechanically, the ancestry chain does not include a valid route to that node.
-- **Multiple matches appear while tracing back.** The user sees a multiple-matches error. Mechanically, more than one ancestry branch resolves to different items for the same lookup.
-- **Pinned data breaks the chain in manual execution.** The user sees a prompt to unpin the node. Mechanically, pinned items short-circuit the ancestry chain that `WorkflowDataProxy` expects.
-- **The requested item index does not exist upstream.** The user sees an invalid index error. Mechanically, the lookup asks for an item number beyond the upstream output count.
-- **Intermediate nodes have not executed yet.** The user sees a can-not-get-data error that points at missing intermediate execution. Mechanically, the ancestry chain passes through nodes that still lack run data.
+- **Missing lineage from upstream.** The user sees a paired-item lookup failure that says the data is unavailable. Mechanically, the upstream item never carried `pairedItem`, which often happens in custom Code output.
+- **No route back to the referenced node.** The user sees a message about no path back to the node. Mechanically, the ancestry chain does not include a valid route to that node.
+- **More than one upstream match exists.** The user sees a multiple-matches error. Mechanically, more than one ancestry branch resolves to different items for the same lookup.
+- **Pinned data breaks manual lookup.** The user sees a prompt to unpin the node. Mechanically, pinned items short-circuit the ancestry chain that `WorkflowDataProxy` expects.
+- **The upstream item number does not exist.** The user sees an invalid index error. Mechanically, the lookup asks for an item number beyond the upstream output count.
+- **A node in the chain has not run yet.** The user sees a data lookup failure that points at missing intermediate execution. Mechanically, the ancestry chain passes through nodes that still lack run data.
 
 ## Canvas relationship
 
-The editor canvas projects this execution model rather than storing a second copy of it. The run picker, item counts, and input and output panels all read from `runData`, so the canvas shows the execution history instead of inventing separate state. For that distinction, see [The canvas is not the execution](/03-the-canvas-is-not-the-execution.md).
+The editor canvas reads this execution model rather than storing a second copy. The run picker, item counts, and input and output panels all read from `runData`, so the canvas shows execution history instead of inventing separate state. For that distinction, see [The canvas is not the execution](/03-the-canvas-is-not-the-execution.md).
 
 ## Where to look in the code
 
