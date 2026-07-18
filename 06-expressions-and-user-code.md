@@ -6,7 +6,7 @@ This guide describes the runtime path that `{{ }}` expressions and Code node Jav
 
 ## When expressions run
 
-When a node asks for a parameter value, n8n resolves the parameter lazily, one node at a time, for the current run and current item, at the moment the engine needs the value. `WorkflowExpression.getParameterValue()` hands the current `(runIndex, itemIndex)` to `resolveSimpleParameterValue()` and only builds expression state when the parameter actually contains an expression. See [Anatomy of an execution](/01-anatomy-of-an-execution.md) for the broader execution flow.
+When a node asks for a parameter value, n8n resolves the parameter lazily, one node at a time, for the current run and current item, at the moment the engine needs the value. `WorkflowExpression.getParameterValue()` hands the current `(runIndex, itemIndex)` to `resolveSimpleParameterValue()` and only builds expression state when the parameter actually contains an expression. See [Anatomy of an execution](./01-anatomy-of-an-execution.md) for the broader execution flow.
 
 ## The template engine layer
 
