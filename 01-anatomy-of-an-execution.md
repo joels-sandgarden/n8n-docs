@@ -28,7 +28,7 @@ A manual run starts as a canvas action, but the live execution quickly becomes o
 
 A `destinationNode` changes the request into a partial execution, which belongs on [04-partial-executions-and-dirty-nodes.md]. The ordinary manual full-run path leaves `runData` empty, sends the workflow id, start nodes, and trigger input to the server, and keeps the run focused on the workflow's natural start point.
 
-`runWorkflowApi` refuses to start unless the push connection is already open, because the editor needs the live stream before the execution begins. The request then leaves the editor through the workflows store and enters the server side of the run.
+`runWorkflowApi` refuses to start unless the push connection is already open, because the editor needs the live stream before the execution begins. The request then leaves the editor through the workflows store and reaches the server.
 
 ### The server registers the execution
 
