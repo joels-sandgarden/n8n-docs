@@ -10,7 +10,7 @@ The support packages sit beside those layers and supply the platform plumbing th
 
 ## The workflow artifact
 
-n8n stores a workflow as data. `IWorkflowBase` and the related connection types in `packages/workflow/src/interfaces.ts` define that persisted shape: nodes, connections, settings, static data, pin data, and execution related metadata. The `Workflow` class in `packages/workflow/src/workflow.ts` turns that plain object into a runtime graph by indexing nodes by name and building both forward and reverse connection maps, which gives the engine a fast way to ask what points into a node and what follows from it.
+n8n stores a workflow as data. `IWorkflowBase` and the related connection types in `packages/workflow/src/interfaces.ts` define that persisted shape: nodes, connections, settings, static data, pin data, and execution related metadata. For the item-array shape that execution data uses, see the official [understand n8n's data structure](https://docs.n8n.io/build/work-with-data/understand-n8ns-data-structure) page. The `Workflow` class in `packages/workflow/src/workflow.ts` turns that plain object into a runtime graph by indexing nodes by name and building both forward and reverse connection maps, which gives the engine a fast way to ask what points into a node and what follows from it.
 
 That shared model lets the same workflow move through the database, the canvas editor, and the execution engine without changing its meaning. The database layer stores the workflow record, the editor reshapes the same structure for the canvas, and the runtime loads the same structure into graph indexes before execution starts.
 
