@@ -47,9 +47,11 @@ The runner receives only the data it needs together with an execution context th
 
 ## Related pages
 
-Read this page together with [Items, runs, and paired item](/05-items-runs-and-paireditem.md), [Anatomy of an execution](/01-anatomy-of-an-execution.md), and [The canvas is not the execution](/03-the-canvas-is-not-the-execution.md). Those guides cover the item lineage model, the execution flow, and the difference between the editor canvas and runtime behavior.
+Use this page with [Items, runs, and paired item](/05-items-runs-and-paireditem.md), [Anatomy of an execution](/01-anatomy-of-an-execution.md), and [The canvas is not the execution](/03-the-canvas-is-not-the-execution.md). These guides cover item lineage, execution timing, and the split between the editor canvas and runtime behavior.
 
 ### Official docs
+
+Reference material:
 
 - [Task runners configuration](https://docs.n8n.io/hosting/configuration/task-runners/)
 - [Code node reference](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.code/)
@@ -58,7 +60,7 @@ Read this page together with [Items, runs, and paired item](/05-items-runs-and-p
 
 ## Where to look in the code
 
-- `packages/workflow/src/workflow-expression.ts` — parameter resolution and current run and item coordinates.
+- `packages/workflow/src/workflow-expression.ts` — parameter resolution for the current run and item.
 - `packages/workflow/src/expression.ts` and `packages/workflow/src/expression-sandboxing.ts` — expression engine wiring and AST guards.
 - `packages/workflow/src/workflow-data-proxy.ts` — magic variables, paired item lookup, and node scoped helpers.
 - `packages/@n8n/tournament/src/index.ts` — the first-party template engine behind `{{ }}` expressions.
