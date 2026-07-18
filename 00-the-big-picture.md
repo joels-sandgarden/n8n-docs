@@ -12,7 +12,7 @@ The support packages sit beside those layers and supply the platform plumbing th
 
 n8n stores a workflow as data. `IWorkflowBase` and the related connection types in `packages/workflow/src/interfaces.ts` define that persisted shape: nodes, connections, settings, static data, pin data, and execution related metadata. The `Workflow` class in `packages/workflow/src/workflow.ts` turns that plain object into a runtime graph by indexing nodes by name and building both forward and reverse connection maps, which gives the engine a fast way to ask what points into a node and what follows from it.
 
-That shared model lets the same workflow move through the database, the canvas editor, and the execution engine without changing its meaning. The database layer stores the workflow record, the editor reshapes the same structure for the canvas, and the runtime loads the same structure into graph indexes before execution starts.
+That shared model lets the database, the canvas editor, and the execution engine work with the workflow without changing its meaning. The database layer stores the workflow record, the editor reshapes the structure for the canvas, and the runtime loads the structure into graph indexes before execution starts.
 
 ## The node model
 
@@ -20,7 +20,7 @@ Nodes act as capability-bearing classes. `INodeType` exposes optional entry poin
 
 ## How execution moves
 
-When the canvas saves a workflow or a trigger fires, the request enters the `n8n` server. `WorkflowRunner` in `packages/cli/src/workflow-runner.ts` sits at the boundary between stored workflow data and execution control: it registers the run, checks credentials, prepares lifecycle hooks, and decides whether the run stays in the main process or enters queue mode. The process entry points in `packages/cli/src/commands/start.ts` and `packages/cli/src/commands/webhook.ts` show the two shapes that receive work.
+When the canvas saves a workflow or a trigger fires, the request enters the `n8n` server. `WorkflowRunner` in `packages/cli/src/workflow-runner.ts` sits at the boundary between stored workflow data and execution control: it registers the run, checks credentials, prepares lifecycle hooks, and decides whether the run stays in the main process or moves into queue mode. The process entry points in `packages/cli/src/commands/start.ts` and `packages/cli/src/commands/webhook.ts` show the two shapes that receive work.
 
 In the in-process path, `WorkflowRunner` builds a `Workflow` object and hands it to `WorkflowExecute` in `packages/core/src/execution-engine/workflow-execute.ts`. `WorkflowExecute` is the live engine: it walks the graph, schedules nodes, handles partial executions, and owns the lower-level runtime behavior that the sibling pages cover. Its declarative path runs through `RoutingNode`, while programmatic nodes call `execute()` directly. See [/01-anatomy-of-an-execution.md](./01-anatomy-of-an-execution.md), [/02-how-the-engine-decides-what-runs-next.md](./02-how-the-engine-decides-what-runs-next.md), and [/08-one-execution-many-processes.md](./08-one-execution-many-processes.md).
 
