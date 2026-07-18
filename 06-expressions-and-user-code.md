@@ -14,28 +14,20 @@ n8n uses `@n8n/tournament`, a first-party, `riot-tmpl` compatible engine, to tur
 
 ## WorkflowDataProxy and item-scoped data
 
-`WorkflowDataProxy` sits at the center of expression evaluation. It creates each magic variable for a specific `(runIndex, itemIndex)` coordinate, so an expression sees one item's view of the workflow state instead of a direct view of every execution record. That coordinate shapes every lookup: the same expression can return different data for different items because the proxy binds the current run and item before the runtime reads anything.
+`WorkflowDataProxy` sits at the center of expression evaluation. It builds each magic variable for a specific `(runIndex, itemIndex)` coordinate, so an expression reads one item's view of the workflow state instead of the whole execution record. That binding makes the same expression return different data for different items.
 
-The main surfaces all come from that same item-scoped view:
+The main surfaces expose the current item, the current node, workflow metadata, and pairing helpers:
 
-- `$json` exposes the current item's JSON data.
-- `$binary` exposes the current item's binary data.
-- `$node` exposes helpers and data for named nodes.
-- `$items` returns items from named nodes or the current context.
-- `$input` points at the current input stream.
-- `$prevNode` points at the upstream node context.
-- `$workflow` exposes workflow level data and metadata.
-- `$self` exposes the current node context.
-- `$parameter` exposes resolved parameter values for the current node.
-- `$rawParameter` exposes the original parameter value before expression resolution.
-- `$tool` exposes tool context in tool aware workflows.
-- `$getPairedItem` exposes lineage aware paired item lookup.
+- Current item: `$json` and `$binary`.
+- Node and input state: `$node`, `$items`, `$input`, `$prevNode`, and `$self`.
+- Workflow and parameter state: `$workflow`, `$parameter`, `$rawParameter`, and `$tool`.
+- Pairing helpers: `$getPairedItem`.
 
 These surfaces behave like proxies and closures, not a raw workflow store. That design keeps every lookup anchored to the current coordinate instead of the whole execution history.
 
 ### Lineage aware lookups
 
-`$('Node').item`, `itemMatching`, and `$getPairedItem` follow paired item ancestry. They answer a different question from a direct node read: they try to trace how the current item connects back through upstream nodes. That path can fail for real reasons, including no execution data, an unexecuted node, no path back to the referenced node, missing paired item info, pinned data in manual execution, ambiguous multiple matches, an invalid branch reference, or an invalid item index.
+`$('Node').item`, `itemMatching`, and `$getPairedItem` follow paired item ancestry. They try to trace how the current item connects back through upstream nodes, and that path can fail for real reasons: no execution data, an unexecuted node, no path back to the referenced node, missing paired item info, pinned data in manual execution, ambiguous multiple matches, an invalid branch reference, or an invalid item index.
 
 The resulting messages usually name the referenced node and explain which part of the lineage search failed. They focus on the missing connection, the ambiguous match, or the bad index instead of dumping the full internal trace.
 
