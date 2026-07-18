@@ -10,9 +10,9 @@ Doc Holiday wrote this page from direct exploration of the n8n source repository
 
 This guide complements the official n8n documentation and does not replace it. The authoritative product documentation remains at https://docs.n8n.io.
 
-n8n is fair-code licensed under the Sustainable Use License, with enterprise-licensed components in `.ee` areas of the repository. This guide stays independent from n8n and from any commercial offering tied to it.
+n8n is fair-code licensed under the Sustainable Use License, with enterprise-licensed components in `.ee` areas of the repository. This guide is an independent companion to n8n and to any commercial offering tied to it.
 
-The codebase changes quickly, so this guide reflects a snapshot rather than a permanent description. It should help readers understand the current shape of the system, but it may lag behind active development. For project-specific contact or repository details, use `[CONTACT_OR_REPO_LINK]`.
+The codebase changes quickly, so this guide reflects a snapshot rather than a permanent description. It can help readers understand the current shape of the system, but it may lag behind active development. For project-specific contact or repository details, use `[CONTACT_OR_REPO_LINK]`.
 
 ## Table of contents
 
