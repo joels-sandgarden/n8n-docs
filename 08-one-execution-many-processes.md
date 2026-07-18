@@ -2,7 +2,7 @@
 
 One n8n execution stays coherent because the engine keeps its run state in one serializable `IRunExecutionData` object, created with `createRunExecutionData`. Queueing, waiting, resuming, sub-workflow dispatch, and error workflows all move that object across storage boundaries, load it again, and rebuild the same loop around it.
 
-See [Anatomy of an execution](/01-anatomy-of-an-execution.md) and [Items, runs, and `pairedItem`](/05-items-runs-and-paireditem.md) for the shape of that state. For the broader execution-mode matrix, see the official [execution types](https://docs.n8n.io/workflows/executions/execution-types/) page.
+See [Anatomy of an execution](/01-anatomy-of-an-execution.md) and [Items, runs, and `pairedItem`](/05-items-runs-and-paireditem.md) for the shape of that state. For the broader execution-mode matrix, see the official [execution types](https://docs.n8n.io/build/understand-workflows/understand-executions/types-of-executions) page.
 
 ```mermaid
 flowchart LR
