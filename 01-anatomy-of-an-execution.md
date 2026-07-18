@@ -40,7 +40,7 @@ A `destinationNode` changes the request into a partial execution, which belongs 
 
 ### The engine turns the run into state
 
-`WorkflowExecute` in `packages/core/src/execution-engine/workflow-execute.ts` owns the live run. Its constructor holds a single `IRunExecutionData` object, and `createRunExecutionData` in `packages/workflow/src/run-execution-data-factory.ts` fills that object with `startData`, `resultData`, `executionData`, `waitingExecution`, `waitingExecutionSource`, `resumeToken`, and the other defaults that keep the run serializable.
+`WorkflowExecute` in `packages/core/src/execution-engine/workflow-execute.ts` owns the live run. Its constructor keeps one `IRunExecutionData` object in play, and `createRunExecutionData` in `packages/workflow/src/run-execution-data-factory.ts` fills that object with `startData`, `resultData`, `executionData`, `waitingExecution`, `waitingExecutionSource`, `resumeToken`, and the other defaults that keep the run serializable.
 
 `WorkflowExecute.run` seeds `executionData.nodeExecutionStack` with the first node and records the initial `resultData.pinData`. That stack and result object stay together for the whole execution; the engine does not hand work off to a separate canvas model.
 
