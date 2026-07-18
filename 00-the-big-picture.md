@@ -10,7 +10,7 @@ The support packages sit beside those layers and supply the platform plumbing th
 
 ## The workflow artifact
 
-n8n stores a workflow as data. `IWorkflowBase` and the related connection types in `packages/workflow/src/interfaces.ts` define that persisted shape: nodes, connections, settings, static data, pin data, and execution metadata. The `Workflow` class in `packages/workflow/src/workflow.ts` turns that plain object into a runtime graph by indexing nodes by name and building both forward and reverse connection maps, which gives the engine a fast way to ask what points into a node and what follows from it.
+n8n stores a workflow as data. `IWorkflowBase` and the related connection types in `packages/workflow/src/interfaces.ts` define that persisted shape: nodes, connections, settings, static data, pin data, and execution related metadata. The `Workflow` class in `packages/workflow/src/workflow.ts` turns that plain object into a runtime graph by indexing nodes by name and building both forward and reverse connection maps, which gives the engine a fast way to ask what points into a node and what follows from it.
 
 That shared model lets the same workflow move through the database, the canvas editor, and the execution engine without changing its meaning. The database layer stores the workflow record, the editor reshapes the same structure for the canvas, and the runtime loads the same structure into graph indexes before execution starts.
 
@@ -24,7 +24,7 @@ When the canvas saves a workflow or a trigger fires, the request enters the `n8n
 
 In the in-process path, `WorkflowRunner` builds a `Workflow` object and hands it to `WorkflowExecute` in `packages/core/src/execution-engine/workflow-execute.ts`. `WorkflowExecute` is the live engine: it walks the graph, schedules nodes, handles partial executions, and owns the lower-level runtime behavior that the sibling pages cover. Its declarative path runs through `RoutingNode`, while programmatic nodes call `execute()` directly. See [/01-anatomy-of-an-execution.md](./01-anatomy-of-an-execution.md), [/02-how-the-engine-decides-what-runs-next.md](./02-how-the-engine-decides-what-runs-next.md), and [/08-one-execution-many-processes.md](./08-one-execution-many-processes.md).
 
-In queue mode, `WorkflowRunner` hands the job to `ScalingService` in `packages/cli/src/scaling/scaling.service.ts`. That service writes Bull jobs to Redis, wakes a worker, and later reconciles the stored execution with the job result. The worker path in `packages/cli/src/commands/worker.ts` finishes the same execution and sends streamed chunks or persisted execution data back through the active execution and storage layers, so the editor can render progress and the final result from the same execution record.
+In queue mode, `WorkflowRunner` hands the job to `ScalingService` in `packages/cli/src/scaling/scaling.service.ts`. That service writes Bull jobs to Redis, wakes a worker, and later reconciles the stored execution with the job result. The worker path in `packages/cli/src/commands/worker.ts` finishes the same execution and sends streamed chunks or stored execution data back through the active execution and storage layers, so the editor can render progress and the final result from the same execution record.
 
 ## The process model
 
