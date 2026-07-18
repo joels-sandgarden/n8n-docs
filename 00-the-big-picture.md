@@ -40,6 +40,7 @@ The sibling pages below cover the details behind that path: [Anatomy of an execu
 flowchart LR
   Editor["Editor UI"]
   Server["CLI server"]
+  Activation["Activation"]
   Runner["WorkflowRunner"]
   Engine["WorkflowExecute"]
   WorkflowTypes["Workflow types"]
@@ -49,7 +50,8 @@ flowchart LR
 
   Editor -->|"serialize workflow"| Server
   Server -->|"REST"| Runner
-  Server -->|"activation"| Runner
+  Server -->|"activation"| Activation
+  Activation -->|"start run"| Runner
   Runner -->|"in-process execution"| Engine
   Runner -->|"queue job"| Worker
   Worker -->|"load execution data"| Database
