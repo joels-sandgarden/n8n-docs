@@ -6,7 +6,7 @@ See [Anatomy of an execution](/01-anatomy-of-an-execution.md) and [Items, runs, 
 
 ```mermaid
 flowchart LR
-  Main["main process"] -->|run local or enqueue| Runner["WorkflowRunner"]
+  Main["main(s) and editor traffic"] -->|run local or enqueue| Runner["WorkflowRunner"]
   Webhook["webhook process"] -->|production webhook request| Runner
   Runner -->|Bull job envelope| Queue["Bull queue on Redis"]
   Queue -->|job| Worker["worker process"]
