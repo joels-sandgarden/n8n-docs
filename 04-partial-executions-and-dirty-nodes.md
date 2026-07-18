@@ -4,7 +4,7 @@
 
 Partial execution lets the workflow engine run only the portion of a workflow that changed. It matters because the engine can reuse valid results from earlier runs instead of replaying every node every time.
 
-Dirty nodes support that behavior. A dirty node marks a part of the workflow whose stored result no longer matches the current upstream state, so the engine knows which downstream work it must rebuild.
+Dirty nodes support that behavior. A dirty node marks workflow state whose stored result no longer matches the current upstream state, so the engine knows which downstream work it must rebuild.
 
 ## Mental model
 
@@ -16,9 +16,9 @@ Nodes on the affected path become dirty when upstream data changes, when a branc
 
 ## Why dirty nodes exist
 
-Dirty nodes prevent partial execution from mixing fresh and stale results. Without that distinction, a rerun could reuse output that depends on data the engine has already replaced.
+Dirty nodes prevent partial execution from mixing fresh and stale results. Without that distinction, a rerun could reuse output that depends on data the engine already replaced.
 
-The dirty marker gives the engine a simple rule: reuse clean results, recompute dirty ones, and keep the boundary between them explicit. That rule keeps partial runs predictable even when a workflow contains long chains or multiple branches.
+Dirty markers give the engine a simple rule: reuse clean results, recompute dirty ones, and keep the boundary between them explicit. That rule keeps partial runs predictable even when a workflow contains long chains or multiple branches.
 
 ## How partial execution flows through the engine
 
