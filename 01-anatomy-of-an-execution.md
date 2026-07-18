@@ -74,7 +74,7 @@ The canvas styling follows that same result data. The green borders and item cou
 
 If `waitTill` stays set, the engine keeps the run alive and the push layer emits `executionWaiting`; that branch belongs with [one execution, many processes](/08-one-execution-many-processes.md). A `Wait` node can hold the execution open across processes, but the same run object still carries the state.
 
-`packages/cli/src/execution-lifecycle/execution-lifecycle-hooks.ts` and `packages/cli/src/executions/execution-persistence.ts` decide what storage keeps. Save settings can keep the execution, soft-delete a manual run, or prune an unsaved run according to the configured retention rules.
+`packages/cli/src/execution-lifecycle/execution-lifecycle-hooks.ts` and `packages/cli/src/executions/execution-persistence.ts` decide what storage keeps. Save settings can keep the execution, soft-delete a manual run, or prune an unsaved run according to the configured retention rules. Practical breakpoint points include `runWorkflowApi`, `WorkflowRunner.run`, `WorkflowExecute.run`, `processRunExecutionData`, and `hookFunctionsPush`.
 
 ## One execution at a glance
 
