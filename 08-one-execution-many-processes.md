@@ -50,7 +50,7 @@ Manual and chat runs load draft workflow data. Production runs load published wo
 
 ## Error workflows spawn a separate run
 
-`packages/cli/src/workflows/workflow-execution.service.ts::executeErrorWorkflow` does not resume the failed parent. It loads the active or published version of the error workflow, checks the sub-workflow policy, and then starts a brand-new error-workflow execution with a single error item (`json: workflowErrorData`).
+`packages/cli/src/workflows/workflow-execution.service.ts::executeErrorWorkflow` does not resume the failed parent. It loads the active or published version of the error workflow, checks the sub-workflow policy, and then starts a brand-new error-workflow execution with one item whose JSON body contains `workflowErrorData`.
 
 The failed parent sets `shouldResume` to `false`, so the error workflow stays separate from the original workflow run. That boundary matters for item lineage as well: the error workflow gets a separate execution record, not a continuation of the failed branch.
 
@@ -66,7 +66,7 @@ Queue workers and regular-mode concurrency control solve different problems. Wor
 | Production webhook | The main process receives the webhook and runs the execution in process. | The webhook process receives the request, `WorkflowRunner` enqueues the job, and a worker runs it. |
 | Cron poll | The main process schedules and runs the execution in process. | The main process schedules the run, then `WorkflowRunner` can hand it to a worker. |
 | Wait due | The leader main process resumes the paused run in process. | The leader main process resumes through `WorkflowRunner`, which can hand the continuation to a worker. |
-| Sub-workflow call | The parent process starts the child execution and can wait for it or continue immediately. | The child execution stays in the worker path with its parent, instead of becoming a separate queue hop. |
+| Sub-workflow call | The parent process starts the child execution and can wait for it or continue immediately. | The child execution stays on the same worker path as the parent and does not create a second queue job. |
 
 ## Where to look in the code
 
