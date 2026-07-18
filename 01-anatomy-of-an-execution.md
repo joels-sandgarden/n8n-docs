@@ -26,7 +26,7 @@ A manual run starts as a canvas action, but the live execution quickly becomes o
 
 `runEntireWorkflow` in `packages/frontend/editor-ui/src/app/composables/useRunWorkflow.ts` starts the trace. It resolves the selected trigger, records telemetry, and calls `runWorkflow`. That method saves dirty workflow state when needed, gathers the canvas data, and builds `IStartRunData` through `consolidateRunDataAndStartNodes`.
 
-A `destinationNode` changes the request into a partial execution, which belongs on [04-partial-executions-and-dirty-nodes.md]. The ordinary manual full-run path leaves `runData` empty, sends the workflow id, start nodes, and trigger input to the server, and keeps the run focused on the workflow's natural start point.
+A `destinationNode` changes the request into a partial execution, which belongs on [partial executions and dirty nodes](/04-partial-executions-and-dirty-nodes.md). The ordinary manual full-run path leaves `runData` empty, sends the workflow id, start nodes, and trigger input to the server, and keeps the run focused on the workflow's natural start point.
 
 `runWorkflowApi` refuses to start unless the push connection is already open, because the editor needs the live stream before the execution begins. The request then leaves the editor through the workflows store and reaches the server.
 
@@ -72,7 +72,7 @@ The canvas styling follows that same result data. The green borders and item cou
 
 `processSuccessExecution` decides whether the run ends in `success`, `error`, `canceled`, or `waiting`. It moves node metadata into the final run data, captures `stoppedAt`, closes any trigger or webhook cleanup function, and fires `workflowExecuteAfter` so the CLI layer can persist or prune the execution.
 
-If `waitTill` stays set, the engine keeps the run alive and the push layer emits `executionWaiting`; that branch belongs with [08-one-execution-many-processes.md]. A `Wait` node can hold the execution open across processes, but the same run object still carries the state.
+If `waitTill` stays set, the engine keeps the run alive and the push layer emits `executionWaiting`; that branch belongs with [one execution, many processes](/08-one-execution-many-processes.md). A `Wait` node can hold the execution open across processes, but the same run object still carries the state.
 
 `packages/cli/src/execution-lifecycle/execution-lifecycle-hooks.ts` and `packages/cli/src/executions/execution-persistence.ts` decide what storage keeps. Save settings can keep the execution, soft-delete a manual run, or prune an unsaved run according to the configured retention rules.
 
