@@ -10,11 +10,11 @@ When a node asks for a parameter value, n8n resolves the parameter lazily, one n
 
 ## The template engine layer
 
-n8n uses `@n8n/tournament`, a first-party, `riot-tmpl` compatible engine, to turn `{{ }}` templates into executable code. Tournament handles template compilation and execution. n8n adds the workflow data proxy, AST sanitizers, and sandboxing rules before a template reaches the runtime.
+ n8n uses `@n8n/tournament`, a first-party, output-compatible rewrite of `riot-tmpl`, to turn `{{ }}` templates into executable code. Tournament handles template compilation and execution. n8n layers the workflow data proxy, AST sanitizers, and sandboxing rules on top before a template reaches the runtime.
 
 ## WorkflowDataProxy and item-scoped data
 
-`WorkflowDataProxy` sits at the center of expression evaluation. It builds each magic variable for a specific `(runIndex, itemIndex)` coordinate, so an expression reads one item's view of the workflow state instead of the whole execution record. That binding makes the same expression return different data for different items.
+ `WorkflowDataProxy` sits at the center of expression evaluation. It builds each magic variable for a specific `(runIndex, itemIndex)` coordinate, so an expression reads one item's view of the workflow state instead of the whole execution record. The `getDataProxy()` helper assembles that view from nested helpers for node data, context, parameters, and paired-item traversal. That binding makes the same expression return different data for different items.
 
 The main surfaces expose the current item, the current node, workflow metadata, and pairing helpers:
 
@@ -37,13 +37,13 @@ The resulting messages usually name the referenced node and explain which part o
 
 ## Sandboxing and the isolated expression runtime
 
-Expression evaluation stays inside the AST guards in `expression-sandboxing.ts` and the isolated runtime in `@n8n/expression-runtime`. `Expression.initExpressionEngine()` creates an `ExpressionEvaluator` with `IsolatedVmBridge`, and the runtime uses lazy proxies and safe globals inside an isolated context. The architecture notes also describe a task runner bridge, but the live server-side expression path uses the isolated-vm bridge.
+ Expression evaluation stays inside the AST guards in `expression-sandboxing.ts`, where `ThisSanitizer`, `PrototypeSanitizer`, and `DollarSignValidator` block unsafe references before the isolated runtime in `@n8n/expression-runtime` runs the expression. `Expression.initExpressionEngine()` creates an `ExpressionEvaluator` with `IsolatedVmBridge`, and the runtime uses lazy proxies and safe globals inside an isolated context. The architecture notes also describe a task runner bridge, but the live server-side expression path uses the isolated-vm bridge.
 
 ## Code node runtime boundary
 
-Code node JavaScript does not run in the main process JavaScript context. n8n asks a task runner for work, the broker matches the task to a runner, and the runner executes the script and streams results back. The CLI can start an internal runner process or connect to an external one, and the broker uses WebSocket heartbeats and drain handling to manage the connection lifecycle.
+ Code node JavaScript does not run in the main process JavaScript context. n8n splits execution into task runners for isolation and resource control: the broker matches the task to a runner, and the runner executes the script and streams results back. The CLI can start an internal runner process or connect to an external one, and the broker uses WebSocket heartbeats and drain handling to manage the connection lifecycle.
 
-The runner receives only the data it needs together with an execution context that exposes `require`, console access, workflow static data access, RPC helpers, and workflow data proxies. `require-resolver.ts` gates built-in and external module access through allowlists, and secure mode process flags, frozen globals, and Buffer hardening keep the runner isolated from the main process.
+ The runner receives only the data it needs together with an execution context that exposes `require`, console access, workflow static data access, RPC helpers, and workflow data proxies. `require-resolver.ts` gates built-in and external module access through allowlists, and secure mode process flags, frozen globals, and Buffer hardening keep the runner isolated from the main process. Per-item and run-once-for-all-items modes change how many items the runner processes, not the runtime boundary itself.
 
 ## Related pages
 
