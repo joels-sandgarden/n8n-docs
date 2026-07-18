@@ -36,7 +36,7 @@ That split matters because the same disabled node can behave like a passthrough 
 
 Pins look like saved node output, but they act as editor data, not as a production input. `useRunWorkflow.ts` seeds local playback with `pinData` inside `createRunExecutionData()`, and the editor renders the run from that state. The backend run request passes through `workflows.store.ts`, and `fetchExecutionDataById()` later reads the saved execution record back for display. The editor can therefore replay pins, but the server still owns the real run.
 
-The official [execution types](https://docs.n8n.io/workflows/executions/) docs explain the difference between manual, partial, and stored executions. That distinction is the reason a pin can affect what the editor shows while leaving production execution unchanged.
+The official [execution types](https://docs.n8n.io/build/understand-workflows/understand-executions/types-of-executions) docs explain the difference between manual, partial, and stored executions. That distinction is the reason a pin can affect what the editor shows while leaving production execution unchanged.
 
 ## “Execute this node” is not “execute one node”
 
