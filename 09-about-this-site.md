@@ -6,6 +6,8 @@ The intended audience includes engineers who run, debug, extend, or embed n8n. I
 
 Doc Holiday wrote this guide by exploring the n8n source repository directly. Every page stays grounded in actual code, with real file paths and symbol names, as of `[GENERATED_FROM: commit SHORT_SHA, DATE]`. The guide presents one dated snapshot of an actively developed codebase, so it treats migration-state details as observations from that date rather than permanent structure.
 
+The pages start with the whole platform and then narrow to the places where execution, data flow, and user code meet. That path matters because n8n behaves differently when a workflow runs normally, resumes after a pause, or crosses a process boundary. The guide names those relationships so a reader can follow the system from concept to code without losing the larger picture.
+
 ## Scope
 
 This guide complements the official n8n documentation and does not replace it. The authoritative product documentation remains at https://docs.n8n.io.
@@ -13,6 +15,8 @@ This guide complements the official n8n documentation and does not replace it. T
 n8n is fair-code licensed under the Sustainable Use License, with enterprise-licensed components in `.ee` areas of the repository. This guide is an independent companion to n8n and to any commercial offering tied to it.
 
 The codebase changes quickly, so this guide reflects a snapshot rather than a permanent description. Corrections and updates are welcome at `[CONTACT_OR_REPO_LINK]`.
+
+That structure keeps the guide focused. It does not try to cover every file in the repository, and it does not duplicate the public product docs. Instead, it points to the pieces that explain behavior: what starts work, what decides the next step, what preserves data between runs, and where the execution model diverges from the canvas.
 
 ## Table of contents
 
