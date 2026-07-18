@@ -32,7 +32,7 @@ In queue mode, `WorkflowRunner` hands the job to `ScalingService` in `packages/c
 
 ## What this guide is not
 
-This page is not a node catalog, not API reference, and not a deep dive into the active-development AI packages listed in `packages/cli/package.json`. It maps the stable platform shape and stops there.
+This page is not a node catalog, not API reference, and not a deep dive into the AI packages still in active development in `packages/cli/package.json`. It maps the stable platform shape and stops there.
 
 ## Platform map
 
@@ -59,11 +59,10 @@ flowchart LR
   execute --> nodes
   server --> db
   execute --> db
-  runner --> worker
-  worker --> queue
+  runner --> queue
   queue --> worker
   worker --> execute
-  execute --> editor
+  execute -->|streamed chunks or persisted execution data| editor
 ```
 
 ## Where to look in the code
