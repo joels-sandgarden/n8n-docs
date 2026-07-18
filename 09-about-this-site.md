@@ -22,6 +22,8 @@ Readers can use the map to move from broad concepts to the specific code paths t
 
 When a behavior changes, the guide points to the subsystem boundary that moved and the runtime consequence that follows. That lets the page explain why a change matters without turning into a file list, a product tour, or a substitute for the official docs for readers who need the mental model quickly.
 
+It also makes room for the disagreements that matter most: when the editor model, the run data, and the live execution engine do not line up, the guide names the gap instead of smoothing it over.
+
 ## Table of contents
 
 - [/00-the-big-picture.md](/00-the-big-picture.md) — A map of the whole platform and its major moving parts.
