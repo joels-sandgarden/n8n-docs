@@ -6,7 +6,7 @@ The canvas projects `IWorkflowBase`. Execution projects `IRunExecutionData`. Tho
 
 The canvas suggests that wire direction alone determines branch order. The engine does not follow that mental model. In `useRunWorkflow.ts`, `sortNodesByYPosition()` sorts the start nodes by canvas Y before the payload leaves the editor, and `WorkflowExecute.addNodeToBeExecuted()` uses the workflow's execution order setting to decide whether it unshifts or pushes the next node onto the stack. That makes branch order sensitive to the payload, not just to the wires on the screen.
 
-The result is easy to miss in `executionOrder: 'v1'`: moving a node vertically can change which branch runs first even when the wires stay the same. See [How the engine decides what runs next](/02-how-the-engine-decides-what-runs-next.md) and the official [execution order](https://docs.n8n.io/workflows/executions/execution-order/) docs for the wider rule set.
+The result is easy to miss in `executionOrder: 'v1'`: moving a node vertically can change which branch runs first even when the wires stay the same. See [How the engine decides what runs next](/02-how-the-engine-decides-what-runs-next.md) and the official [execution order](https://docs.n8n.io/build/flow-logic/understand-execution-order) docs for the wider rule set.
 
 ## One box, many runs
 
