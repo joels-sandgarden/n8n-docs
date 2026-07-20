@@ -8,21 +8,22 @@ That toggle controls scheduling only. `IRunExecutionData.version` in `packages/w
 
 ## One work list, two enqueue directions
 
-When `workflow.settings.executionOrder` equals `v1`, the scheduler treats the front of the list as the next branch to finish. `processRunExecutionData` collects child nodes, sorts them by canvas position, and hands them back so the topmost child runs first. If two siblings share the same height, the leftmost one wins. Moving a node on the canvas can therefore change the next node that runs. See [The canvas is not the execution](/03-the-canvas-is-not-the-execution.md) for the broader canvas model.
+When `workflow.settings.executionOrder` equals `v1`, `nodeExecutionStack` behaves like a LIFO stack: `processRunExecutionData` always takes from the front, and `addNodeToBeExecuted` uses `unshift` so the most recently discovered child is next. When the setting is legacy `v0`, the same front-of-list consumption combines with `push`, so the work list behaves like a FIFO queue and advances all branches one node at a time. That single choice, `unshift` versus `push`, is the branch-ordering switch.
+
+Because v1 inserts children in canvas order before they reach the front of the list, the topmost sibling wins, then the leftmost one. Moving a node on the canvas can therefore change execution order. See [The canvas is not the execution](03-the-canvas-is-not-the-execution.md) for the broader canvas model.
 
 ```mermaid
 flowchart TD
-    "nodeExecutionStack" --> "shift() from the front"
-    "shift() from the front" --> "Node runs"
-    "Node runs" --> "Has output items?"
-    "Has output items?" -- "yes" --> "Sort children by canvas position"
-    "Sort children by canvas position" --> "executionOrder = v1"
-    "executionOrder = v1" --> "unshift to the front"
-    "executionOrder = legacy v0" --> "push to the back"
-    "Has output items?" -- "no" --> "Branch ends"
-    "nodeExecutionStack" --> "waiting sweep when the stack is empty"
-    "waiting sweep when the stack is empty" --> "requiredInputs"
-```
+    "Take front entry" --> "Run node"
+    "Run node" --> "Output empty?"
+    "Output empty?" -- "yes" --> "End branch"
+    "Output empty?" -- "no" --> "Has multiple inputs?"
+    "Has multiple inputs?" -- "yes" --> "Park in waitingExecution"
+    "Has multiple inputs?" -- "no" --> "Order children by canvas position"
+    "Order children by canvas position" --> "enqueue with unshift in v1"
+    "Order children by canvas position" --> "enqueue with push in v0"
+    "Park in waitingExecution" --> "waiting sweep when stack is empty"
+    "waiting sweep when stack is empty" --> "requiredInputs"
 
 ## Legacy `v0` keeps FIFO behavior
 
