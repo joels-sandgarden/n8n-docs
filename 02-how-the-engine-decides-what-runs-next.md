@@ -50,8 +50,8 @@ flowchart TD
 
 ## Where to look in the code
 
-- `packages/core/src/execution-engine/workflow-execute.ts` — live scheduling, `shift()` and `unshift()` versus `push()`, joins, retries, and the waiting-node sweep.
-- `packages/core/src/execution-engine/partial-execution-utils.ts` — stack reconstruction and cycle handling when a partial execution resumes.
-- `packages/nodes-base/nodes/SplitInBatches/v3/SplitInBatchesV3.node.ts` — a concrete loop node that keeps state across runs and drives a cycle with ordinary outputs.
-- `packages/workflow/src/run-execution-data/run-execution-data.v0.ts` — legacy execution data shape that can still carry older node-ordering behavior.
-- `packages/workflow/src/run-execution-data/run-execution-data.v1.ts` — current execution data shape and the unrelated persistence-format version.
+- `packages/core/src/execution-engine/workflow-execute.ts` — live scheduling, the work list, joins, retries, and the waiting-node sweep.
+- `packages/core/src/execution-engine/partial-execution-utils/handle-cycles.ts` — cycle handling when a partial execution resumes.
+- `packages/core/src/execution-engine/partial-execution-utils/recreate-node-execution-stack.ts` — stack reconstruction for resumed runs.
+- `packages/nodes-base/nodes/SplitInBatches/v3/SplitInBatchesV3.node.ts` — a loop node example that keeps state across runs.
+- `packages/workflow/src/run-execution-data/run-execution-data.v0.ts` and `packages/workflow/src/run-execution-data/run-execution-data.v1.ts` — the run-data versions that stay separate from execution order.
