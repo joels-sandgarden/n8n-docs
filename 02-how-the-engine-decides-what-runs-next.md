@@ -42,7 +42,7 @@ The engine itself has no loop construct. A cycle on the canvas only causes a nod
 
 ## Failures change what gets scheduled next
 
-Retry on fail gives a node bounded attempts with a wait between tries. `continueOnFail`, `onError`, and error output routing decide whether the run keeps moving and which output the scheduler enqueues next. A failure can therefore steer the work list just like a successful branch can.
+Retry on fail gives a node a bounded number of attempts with a wait between tries. `continueOnFail`, `onError`, and error output routing decide whether the run keeps moving and which output the scheduler enqueues next. A failure can therefore steer the work list just like a successful branch can.
 
 ## Where to look in the code
 
