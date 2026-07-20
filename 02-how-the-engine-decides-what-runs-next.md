@@ -22,7 +22,7 @@ When one node fans out to several children, v1 collects the children, sorts them
 
 A node with more than one input does not run as soon as one branch reaches it. `addNodeToBeExecuted` parks partial data in `waitingExecution` and `waitingExecutionSource` until the node has enough inputs to make sense of the run. The source map preserves lineage, which is why [Items, runs, and pairedItem](/05-items-runs-and-paireditem.md) matters when the downstream node needs to explain which item came from which parent.
 
-The loop also gives waiting nodes a second chance after the main stack runs empty. That sweep pulls forward any node that now has enough input data, even if some other inputs stayed empty. The result is simple: a join can still complete after one branch dies early, but a node that still lacks required inputs stays parked. When a node expresses required inputs as a value, the scheduler resolves it before this sweep decides whether the node can run; see [Expressions and user code](/06-expressions-and-user-code.md).
+The loop also gives waiting nodes a second chance after the main stack runs empty. That sweep pulls forward any node that now has enough input data, even if some other inputs stayed empty. That means a join can still complete after one branch dies early, while a node that still lacks required inputs stays parked. When a node expresses required inputs as a value, the scheduler resolves it before this sweep decides whether the node can run; see [Expressions and user code](/06-expressions-and-user-code.md).
 
 ## Empty output ends a branch unless the node chooses otherwise
 
@@ -30,7 +30,7 @@ If a node returns no data and does not enter waiting state, the branch ends ther
 
 ## Cycles rely on node state, not special graph logic
 
-The scheduler does not treat a cycle as a separate execution mode. It keeps taking work from the front of the same list, and a node can only loop if it schedules more work for itself. `SplitInBatchesV3` shows the pattern: it stores loop state in `getContext('node')`, returns the next batch on the `loop` output, and finishes on `done`. The loop guard in `processRunExecutionData` stops accidental repeats when the same node and run index come back without progress. Queue mode still uses the same ordering rules after work moves between processes; see [One execution, many processes](/08-one-execution-many-processes.md).
+The scheduler does not treat a cycle as a separate execution mode. It keeps taking work from the front of the same list, and a node can only loop if it schedules more work for itself. `SplitInBatchesV3` shows the pattern: it stores loop state in `getContext('node')`, returns the next batch on the `loop` output, and finishes on `done`. The loop guard in `processRunExecutionData` stops accidental repeats when the same node and run index come back without progress. Queue mode keeps the same ordering rules after work moves between processes; see [One execution, many processes](/08-one-execution-many-processes.md).
 
 ## Retries and error routing stay inside the same scheduler
 
@@ -54,4 +54,4 @@ flowchart TD
 - `packages/core/src/execution-engine/partial-execution-utils.ts` — stack reconstruction and cycle handling when a partial execution resumes.
 - `packages/nodes-base/nodes/SplitInBatches/v3/SplitInBatchesV3.node.ts` — a concrete loop node that keeps state across runs and drives a cycle with ordinary outputs.
 - `packages/workflow/src/run-execution-data/run-execution-data.v0.ts` — legacy execution data shape that can still carry older node-ordering behavior.
-- `packages/workflow/src/run-execution-data/run-execution-data.v1.ts` — current execution data shape and the separate persistence-format version.
+- `packages/workflow/src/run-execution-data/run-execution-data.v1.ts` — current execution data shape and the unrelated persistence-format version.
