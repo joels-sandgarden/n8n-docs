@@ -47,8 +47,7 @@ Retry on fail gives a node a bounded number of attempts with a wait between trie
 
 ## Where to look in the code
 
-- `packages/core/src/execution-engine/workflow-execute.ts` — the main scheduler loop, `shift()` consumption, `unshift` and `push`, sibling sorting, waiting nodes, `requiredInputs`, retries, and error routing.
-- `packages/core/src/execution-engine/workflow-execute.ts` — `prepareConnectionInputData` and the node execution path show which input data the next node actually receives.
-- `packages/nodes-base/nodes/SplitInBatches/v3/SplitInBatchesV3.node.ts` — the loop node keeps state in node context and switches from `loop` to `done`.
+- `packages/core/src/execution-engine/workflow-execute.ts` — `processRunExecutionData` consumes `nodeExecutionStack`, `addNodeToBeExecuted` chooses `unshift` or `push`, and the waiting sweep rechecks `requiredInputs`.
+- `packages/core/src/execution-engine/workflow-execute.ts` — `prepareConnectionInputData` and `runNode` show how the next node gets its inputs, retries, and error routing.
+- `packages/nodes-base/nodes/SplitInBatches/v3/SplitInBatchesV3.node.ts` — the loop node keeps state in node context and switches between `loop` and `done`.
 - `packages/workflow/src/run-execution-data/run-execution-data.ts` — run data versioning and migration stay separate from `workflow.settings.executionOrder`.
-- `03-the-canvas-is-not-the-execution.md` — the neighboring concept page explains why canvas position influences order without turning the canvas into the executor.
