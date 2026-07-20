@@ -2,7 +2,7 @@
 
 The public execution order docs describe the visible rule: workflows created before version 1 run branch nodes in lockstep, while version 1 and later finish one branch before starting another and order siblings from top to bottom, then left to right. `WorkflowExecute` turns that rule into one work list, and this page explains how that list decides branch order, joins, dead ends, loops, and failures.
 
-`nodeExecutionStack` gives the engine one list of pending nodes to manage. `processRunExecutionData` consumes it from the front with `shift()`, and `addNodeToBeExecuted` adds new work to the front with `unshift` or to the back with `push` depending on `workflow.settings.executionOrder`.
+`nodeExecutionStack` gives the engine one work list to manage. `processRunExecutionData` consumes it from the front with `shift()`, and `addNodeToBeExecuted` adds new work to the front with `unshift` or to the back with `push` depending on `workflow.settings.executionOrder`.
 
 That toggle controls scheduling only. `IRunExecutionData.version` in `packages/workflow/src/run-execution-data/run-execution-data.ts` belongs to run data migration and does not change the execution order rule.
 
