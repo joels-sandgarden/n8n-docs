@@ -40,7 +40,7 @@ In a five-node chain, node 1 feeds node 2, node 2 feeds node 3, node 3 feeds nod
 
 ## Dated note
 
-As of July 2026, this page describes the live partial-execution-v2 path. A few comments in `workflow-execute.ts` and the helper files still reference the removed v1 implementation, but `runPartialWorkflow2(...)` now carries the live behavior.
+As of July 2026, this page describes the live partial-execution-v2 path. A few comments in `manual-execution.service.ts` still reference the removed v1 partial-execution implementation, but they are unrelated to the `executionOrder: 'v1'` node-ordering checks in `workflow-execute.ts`; `runPartialWorkflow2(...)` now carries the live behavior.
 
 As of July 2026, tool and AI sub-node partial execution follows a special path through `rewire-graph.ts`, which inserts the virtual `tool-executor` node before the normal rerun resumes.
 
