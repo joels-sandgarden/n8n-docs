@@ -4,7 +4,7 @@ Partial execution rebuilds state in front of the normal `WorkflowExecute` loop. 
 
 ## When partial execution happens
 
-The editor decides whether a run goes full or partial. `useRunWorkflow.ts` only forwards prior `runData` when `destinationNode !== undefined`, and it packages the `dirtyNodeNames` from the editor's `dirtinessByName` map, the chosen `destinationNode`, reusable `startNodes`, pin data, and any agent request context it needs. On the server, `manual-execution.service.ts` sends the request into `runPartialWorkflow2(...)` when `data.destinationNode` and `data.runData` point to a partial rerun. `consolidateRunDataAndStartNodes(...)` keeps reusable branches, returns `startNodeNames`, and trims `runData` so the rerun starts from the smallest safe boundary.
+The editor decides whether a run goes full or partial. `useRunWorkflow.ts` only forwards prior `runData` when `destinationNode !== undefined`, packages the `dirtyNodeNames` from the editor's `dirtinessByName` map, the chosen `destinationNode`, reusable `startNodes`, pin data, and any agent request context it needs, and calls `consolidateRunDataAndStartNodes(...)` to trim `runData` and derive `startNodeNames` before posting the request. On the server, `manual-execution.service.ts` sends the request into `runPartialWorkflow2(...)` when `data.destinationNode` and `data.runData` point to a partial rerun.
 
 ### `find-trigger-for-partial-execution.ts`
 
