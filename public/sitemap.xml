@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>http://localhost:1317/docs/about-this-site/</loc>
+  </url><url>
+    <loc>http://localhost:1317/docs/anatomy-of-an-execution/</loc>
+  </url><url>
+    <loc>http://localhost:1317/docs/expressions-and-user-code/</loc>
+  </url><url>
+    <loc>http://localhost:1317/docs/items-runs-and-paireditem/</loc>
+  </url><url>
+    <loc>http://localhost:1317/</loc>
+  </url><url>
+    <loc>http://localhost:1317/docs/one-execution-many-processes/</loc>
+  </url><url>
+    <loc>http://localhost:1317/docs/partial-executions-and-dirty-nodes/</loc>
+  </url><url>
+    <loc>http://localhost:1317/docs/the-big-picture/</loc>
+  </url><url>
+    <loc>http://localhost:1317/docs/the-canvas-is-not-the-execution/</loc>
+  </url><url>
+    <loc>http://localhost:1317/docs/triggers-webhooks-and-activation/</loc>
+  </url>
+</urlset>

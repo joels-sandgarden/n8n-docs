@@ -1,0 +1,18 @@
+# n8n Field Guide
+
+> A concept-level field guide to the n8n codebase, written by Doc Holiday
+> (https://doc.holiday) by exploring the n8n source directly. Each page explains
+> why a subsystem exists, its central abstractions, and how it actually behaves at
+> runtime. Every doc page is also served as plain markdown at <page-url>/index.md.
+
+## Pages
+
+- [The Big Picture](/docs/the-big-picture/): the map of the whole platform
+- [Anatomy of an Execution](/docs/anatomy-of-an-execution/): one workflow execution traced end to end
+- [The Canvas Is Not the Execution](/docs/the-canvas-is-not-the-execution/): where the visual model and the engine's model disagree
+- [Partial Executions and Dirty Nodes](/docs/partial-executions-and-dirty-nodes/): what "execute step" really does
+- [Items, Runs, and pairedItem](/docs/items-runs-and-paireditem/): the data model of a run — items, runs, and item lineage
+- [Expressions and User Code](/docs/expressions-and-user-code/): how {{ }} expressions and Code nodes actually evaluate
+- [Triggers, Webhooks, and Activation](/docs/triggers-webhooks-and-activation/): how workflows start — editor tests vs production
+- [One Execution, Many Processes](/docs/one-execution-many-processes/): queue mode, wait/resume, and spawned executions
+- [About This Site](/docs/about-this-site/): scope, audience, provenance
