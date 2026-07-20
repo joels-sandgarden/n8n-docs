@@ -1,18 +1,18 @@
 # How the engine decides what runs next
 
-This page explains the live scheduler inside `WorkflowExecute`. It exists so a new engineer can predict execution order from the code instead of reading the whole engine first. The official summary lives at [Understand execution order](https://docs.n8n.io/build/flow-logic/understand-execution-order), and this page expands the machine underneath it.
+This page explains the live scheduler inside `WorkflowExecute`. It gives a new engineer enough of a model to predict execution order from the code without reading the whole engine first. The official summary lives at [Understand execution order](https://docs.n8n.io/build/flow-logic/understand-execution-order), and this page expands the machine underneath it.
 
 For the broader trace of an execution, see [Anatomy of an execution](/01-anatomy-of-an-execution.md). When `processRunExecutionData` starts, it uses a stack that partial execution code has already rebuilt, which is why [Partial executions and dirty nodes](/04-partial-executions-and-dirty-nodes.md) sits next to this page.
 
 ## The work list
 
-`executionData.nodeExecutionStack` is the only work list the live loop needs. Each entry carries the node, the data that node should receive, and the source lineage that explains where the data came from. The loop always removes work from the front with `shift()`, so the execution order depends on where the scheduler adds new entries.
+`executionData.nodeExecutionStack` is the only work list the live loop needs. Each entry carries the node, the data that node should receive, and the source lineage that explains where the data came from. The loop always consumes from the front with `shift()`, so the execution order depends on where the scheduler adds new entries.
 
 ```ts
 const enqueueFn = workflow.settings.executionOrder === 'v1' ? 'unshift' : 'push';
 ```
 
-That single choice separates the two scheduling modes. `push` leaves new work at the tail, so older work runs first and the walk feels breadth-first. `unshift` puts new work at the front, so the current branch keeps running and the walk feels depth-first. The setting only changes scheduling. `executionOrder: 'v0' | 'v1'` names the node-ordering setting and it does not match `IRunExecutionData.version` in `packages/workflow/src/run-execution-data/`.
+That single choice separates the two scheduling modes. `push` leaves new work at the tail, so older work runs first and the walk feels breadth-first. `unshift` puts new work at the front, so the current branch keeps running and the walk feels depth-first. The setting only changes scheduling. `executionOrder: 'v0' | 'v1'` names the node-ordering setting, and it does not match `IRunExecutionData.version` in `packages/workflow/src/run-execution-data/`.
 
 ## Sibling order follows the canvas, but only for siblings
 
