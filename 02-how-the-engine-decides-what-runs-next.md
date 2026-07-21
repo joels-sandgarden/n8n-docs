@@ -2,7 +2,7 @@
 
 This page explains the live scheduler inside `WorkflowExecute`. It gives a new engineer enough of a model to predict execution order from the code without reading the whole engine first. The official summary lives at [Understand execution order](https://docs.n8n.io/build/flow-logic/understand-execution-order), and this page expands the machine underneath it.
 
-For the broader trace of an execution, see [Anatomy of an execution](/01-anatomy-of-an-execution.md). When `processRunExecutionData` starts, it uses a stack that partial execution code has already rebuilt, which is why [Partial executions and dirty nodes](/04-partial-executions-and-dirty-nodes.md) sits next to this page.
+For the broader trace of an execution, see [Anatomy of an execution](/01-anatomy-of-an-execution.md). When `processRunExecutionData` starts, the normal path has already seeded the stack in `WorkflowExecute.run`; partial executions rebuild that stack first, which is why [Partial executions and dirty nodes](/04-partial-executions-and-dirty-nodes.md) sits next to this page.
 
 ## The work list
 
