@@ -8,6 +8,7 @@
 
 - title: The Engine
   pages:
+    - title: How the Engine Decides What Runs Next
     - title: The Canvas Is Not the Execution
     - title: Partial Executions and Dirty Nodes
 

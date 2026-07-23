@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
 
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1317&amp;path=livereload" data-no-instant defer></script>
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=65340&amp;path=livereload" data-no-instant defer></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="What executing a single step really does: the DirectedGraph machinery and the dirtiness rule.">
@@ -11,7 +11,7 @@
   
 
   <title>Partial Executions and Dirty Nodes · n8n Field Guide</title>
-  <link rel="canonical" href="http://localhost:1317/docs/partial-executions-and-dirty-nodes/">
+  <link rel="canonical" href="http://localhost:65340/docs/partial-executions-and-dirty-nodes/">
 
   
 
@@ -71,6 +71,11 @@
 		<details open>
 			<summary>The Engine</summary>
 			<ul>
+				<li>
+					<a href="/docs/how-the-engine-decides-what-runs-next/" >
+						How the Engine Decides What Runs Next
+					</a>
+				</li>
 				<li>
 					<a href="/docs/the-canvas-is-not-the-execution/" >
 						The Canvas Is Not the Execution
@@ -246,7 +251,7 @@
 				<div id="article-body">
 					<p>Partial execution rebuilds state in front of the normal <code>WorkflowExecute</code> loop. It does not create a parallel executor; it narrows the graph, reconstructs the surviving state, and hands control back to the same loop that full runs use. That makes partial execution a reconstruction pass rather than a new runtime.</p>
 <h2 id="when-partial-execution-happens">When partial execution happens</h2>
-<p>The editor decides whether a run goes full or partial. <code>useRunWorkflow.ts</code> only forwards prior <code>runData</code> when <code>destinationNode !== undefined</code>, and it packages the <code>dirtyNodeNames</code> from the editor&rsquo;s <code>dirtinessByName</code> map, the chosen <code>destinationNode</code>, reusable <code>startNodes</code>, pin data, and any agent request context it needs. On the server, <code>manual-execution.service.ts</code> sends the request into <code>runPartialWorkflow2(...)</code> when <code>data.destinationNode</code> and <code>data.runData</code> point to a partial rerun. <code>consolidateRunDataAndStartNodes(...)</code> keeps reusable branches, returns <code>startNodeNames</code>, and trims <code>runData</code> so the rerun starts from the smallest safe boundary.</p>
+<p>The editor decides whether a run goes full or partial. <code>useRunWorkflow.ts</code> calls <code>consolidateRunDataAndStartNodes(...)</code> before it sends the request, keeping reusable branches, returning <code>startNodeNames</code>, and trimming <code>runData</code> so the rerun starts from the smallest safe boundary. On the server, <code>manual-execution.service.ts</code> routes the partial-execution branch into <code>runPartialWorkflow2(...)</code> once the request arrives with <code>data.runData</code> and <code>data.destinationNode</code>.</p>
 <h3 id="find-trigger-for-partial-executionts"><code>find-trigger-for-partial-execution.ts</code></h3>
 <p>This step picks the trigger anchor in the code&rsquo;s preference order: the destination trigger comes first when it is enabled, then an enabled parent trigger with run data, then pinned triggers, and then webhook triggers ahead of any other parent trigger. That order keeps the rerun anchored to the closest valid trigger for the partial request.</p>
 <h3 id="directed-graphts--filter-disabled-nodests"><code>directed-graph.ts</code> + <code>filter-disabled-nodes.ts</code></h3>
@@ -264,12 +269,12 @@
 <p>Cycles need special handling because a start node inside a loop can strand the rerun inside an unstable part of the graph. <code>handle-cycles.ts</code> uses strongly connected component analysis to move that start to the cycle entry, which gives the engine a clean boundary before it re-enters the loop.</p>
 <h2 id="clean-run-datats--recreate-node-execution-stackts"><code>clean-run-data.ts</code> + <code>recreate-node-execution-stack.ts</code></h2>
 <p>After the graph settles, <code>clean-run-data.ts</code> removes old run data at and after the chosen starts and drops data outside the surviving subgraph. <code>recreate-node-execution-stack.ts</code> then rebuilds the execution stack and the waiting-input state from the run data that survived pruning and from pin data. From there the normal main loop resumes, and <code>WorkflowExecute</code> keeps deciding what runs next; the partial path simply hands it a rebuilt state instead of a cold start. For the surrounding execution model, see <a href="/docs/anatomy-of-an-execution/">01-anatomy-of-an-execution</a>
- and <a href="./02-how-the-engine-decides-what-runs-next.md">02-how-the-engine-decides-what-runs-next</a>
+ and <a href="/docs/how-the-engine-decides-what-runs-next/">02-how-the-engine-decides-what-runs-next</a>
 .</p>
 <h2 id="worked-example">Worked example</h2>
 <p>In a five-node chain, node 1 feeds node 2, node 2 feeds node 3, node 3 feeds node 4, and node 4 feeds node 5. If an engineer edits node 4 and then executes node 5, the editor marks node 4 dirty, preserves the clean results from nodes 1 through 3, and asks the server to rebuild state from the first dirty boundary before continuing to node 5. The rerun therefore repeats node 4 and the work downstream of it, while it keeps the earlier branch results that still match the current graph.</p>
 <h2 id="dated-note">Dated note</h2>
-<p>As of July 2026, this page describes the live partial-execution-v2 path. A few comments in <code>workflow-execute.ts</code> and the helper files still reference the removed v1 implementation, but <code>runPartialWorkflow2(...)</code> now carries the live behavior.</p>
+<p>As of July 2026, this page describes the live partial-execution-v2 path. A few comments in <code>manual-execution.service.ts</code> still reference the removed v1 partial-execution implementation, but they are unrelated to the <code>executionOrder: 'v1'</code> node-ordering checks in <code>workflow-execute.ts</code>; <code>runPartialWorkflow2(...)</code> now carries the live behavior.</p>
 <p>As of July 2026, tool and AI sub-node partial execution follows a special path through <code>rewire-graph.ts</code>, which inserts the virtual <code>tool-executor</code> node before the normal rerun resumes.</p>
 <h2 id="pipeline">Pipeline</h2>
 <pre class="mermaid">flowchart TD
@@ -296,12 +301,12 @@
 				<footer id="article-footer">
 	
 		
-		<time datetime="0001-01-01">
+		<time datetime="2026-07-20">
 			<span>
 
 	<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M216-96q-29.7 0-50.85-21.5Q144-139 144-168v-528q0-29 21.15-50.5T216-768h72v-60q0-15.3 10.29-25.65Q308.58-864 323.79-864t25.71 10.35Q360-843.3 360-828v60h240v-60q0-15.3 10.29-25.65Q620.58-864 635.79-864t25.71 10.35Q672-843.3 672-828v60h72q29.7 0 50.85 21.5Q816-725 816-696v528q0 29-21.15 50.5T744-96H216Zm0-72h528v-360H216v360Zm0-432h528v-96H216v96Zm0 0v-96 96Zm264.21 216q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5ZM298.5-394.29q-10.5-10.29-10.5-25.5t10.29-25.71q10.29-10.5 25.5-10.5t25.71 10.29q10.5 10.29 10.5 25.5t-10.29 25.71q-10.29 10.5-25.5 10.5t-25.71-10.29ZM636.21-384q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5Zm-156 144q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5ZM298.5-250.29q-10.5-10.29-10.5-25.5t10.29-25.71q10.29-10.5 25.5-10.5t25.71 10.29q10.5 10.29 10.5 25.5t-10.29 25.71q-10.29 10.5-25.5 10.5t-25.71-10.29ZM636.21-240q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5Z"/></svg>
 
-</span>Updated: 0001-01-01
+</span>Updated: 2026-07-20
 		</time>
 	
 

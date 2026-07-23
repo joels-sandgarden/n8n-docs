@@ -9,6 +9,7 @@
 
 - [The Big Picture](/docs/the-big-picture/): the map of the whole platform
 - [Anatomy of an Execution](/docs/anatomy-of-an-execution/): one workflow execution traced end to end
+- [How the Engine Decides What Runs Next](/docs/how-the-engine-decides-what-runs-next/): the scheduling algorithm — the node stack, v0 vs v1 ordering, joins, dead branches
 - [The Canvas Is Not the Execution](/docs/the-canvas-is-not-the-execution/): where the visual model and the engine's model disagree
 - [Partial Executions and Dirty Nodes](/docs/partial-executions-and-dirty-nodes/): what "execute step" really does
 - [Items, Runs, and pairedItem](/docs/items-runs-and-paireditem/): the data model of a run — items, runs, and item lineage

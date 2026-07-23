@@ -8,7 +8,7 @@ Partial execution rebuilds state in front of the normal `WorkflowExecute` loop. 
 
 ## When partial execution happens
 
-The editor decides whether a run goes full or partial. `useRunWorkflow.ts` only forwards prior `runData` when `destinationNode !== undefined`, and it packages the `dirtyNodeNames` from the editor's `dirtinessByName` map, the chosen `destinationNode`, reusable `startNodes`, pin data, and any agent request context it needs. On the server, `manual-execution.service.ts` sends the request into `runPartialWorkflow2(...)` when `data.destinationNode` and `data.runData` point to a partial rerun. `consolidateRunDataAndStartNodes(...)` keeps reusable branches, returns `startNodeNames`, and trims `runData` so the rerun starts from the smallest safe boundary.
+The editor decides whether a run goes full or partial. `useRunWorkflow.ts` calls `consolidateRunDataAndStartNodes(...)` before it sends the request, keeping reusable branches, returning `startNodeNames`, and trimming `runData` so the rerun starts from the smallest safe boundary. On the server, `manual-execution.service.ts` routes the partial-execution branch into `runPartialWorkflow2(...)` once the request arrives with `data.runData` and `data.destinationNode`.
 
 ### `find-trigger-for-partial-execution.ts`
 
@@ -44,7 +44,7 @@ In a five-node chain, node 1 feeds node 2, node 2 feeds node 3, node 3 feeds nod
 
 ## Dated note
 
-As of July 2026, this page describes the live partial-execution-v2 path. A few comments in `workflow-execute.ts` and the helper files still reference the removed v1 implementation, but `runPartialWorkflow2(...)` now carries the live behavior.
+As of July 2026, this page describes the live partial-execution-v2 path. A few comments in `manual-execution.service.ts` still reference the removed v1 partial-execution implementation, but they are unrelated to the `executionOrder: 'v1'` node-ordering checks in `workflow-execute.ts`; `runPartialWorkflow2(...)` now carries the live behavior.
 
 As of July 2026, tool and AI sub-node partial execution follows a special path through `rewire-graph.ts`, which inserts the virtual `tool-executor` node before the normal rerun resumes.
 

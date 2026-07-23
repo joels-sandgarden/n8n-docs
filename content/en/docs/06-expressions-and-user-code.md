@@ -41,7 +41,7 @@ The resulting messages usually name the referenced node and explain which part o
 
 ## Sandboxing and the isolated expression runtime
 
-Expression evaluation stays inside the AST guards in `expression-sandboxing.ts`, where `ThisSanitizer`, `PrototypeSanitizer`, and `DollarSignValidator` block unsafe references before the isolated runtime in `@n8n/expression-runtime` runs the expression. `Expression.initExpressionEngine()` creates an `ExpressionEvaluator` with `IsolatedVmBridge`, and the runtime uses lazy proxies and safe globals inside an isolated context. The architecture notes also describe a task runner bridge, but the live server-side expression path uses the isolated-vm bridge.
+Expression evaluation stays inside the AST guards in `expression-sandboxing.ts`, where `ThisSanitizer`, `PrototypeSanitizer`, and `DollarSignValidator` are wired as hooks around the Tournament evaluation in the default in-process path and are reused in the VM path. As of July 2026, `renderExpression()` falls back to `evaluateExpression()` in `expression-evaluator-proxy.ts`; the isolated-vm bridge in `@n8n/expression-runtime` is only activated when `N8N_EXPRESSION_ENGINE` explicitly opts the engine into `vm` through `Expression.initExpressionEngine()`.
 
 ## Code node runtime boundary
 

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
 
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1317&amp;path=livereload" data-no-instant defer></script>
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=65340&amp;path=livereload" data-no-instant defer></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="The map of the whole platform: packages, processes, and how a workflow becomes a run.">
@@ -11,7 +11,7 @@
   
 
   <title>The Big Picture · n8n Field Guide</title>
-  <link rel="canonical" href="http://localhost:1317/docs/the-big-picture/">
+  <link rel="canonical" href="http://localhost:65340/docs/the-big-picture/">
 
   
 
@@ -71,6 +71,11 @@
 		<details open>
 			<summary>The Engine</summary>
 			<ul>
+				<li>
+					<a href="/docs/how-the-engine-decides-what-runs-next/" >
+						How the Engine Decides What Runs Next
+					</a>
+				</li>
 				<li>
 					<a href="/docs/the-canvas-is-not-the-execution/" >
 						The Canvas Is Not the Execution
@@ -260,7 +265,7 @@
 <h2 id="how-execution-moves">How execution moves</h2>
 <p>When the canvas saves a workflow or a trigger fires, the request enters the <code>n8n</code> server. <code>WorkflowRunner</code> in <code>packages/cli/src/workflow-runner.ts</code> sits at the boundary between stored workflow data and execution control: it registers the run, checks credentials, prepares lifecycle hooks, and decides whether the run stays in the main process or moves into queue mode. The process entry points in <code>packages/cli/src/commands/start.ts</code> and <code>packages/cli/src/commands/webhook.ts</code> show the two shapes that receive work.</p>
 <p>In the in-process path, <code>WorkflowRunner</code> builds a <code>Workflow</code> object and hands it to <code>WorkflowExecute</code> in <code>packages/core/src/execution-engine/workflow-execute.ts</code>. <code>WorkflowExecute</code> is the live engine: it walks the graph, schedules nodes, handles partial executions, and owns the lower-level runtime behavior that the sibling pages cover. Its declarative path runs through <code>RoutingNode</code>, while programmatic nodes call <code>execute()</code> directly. See <a href="/docs/anatomy-of-an-execution/">/01-anatomy-of-an-execution.md</a>
-, <a href="./02-how-the-engine-decides-what-runs-next.md">/02-how-the-engine-decides-what-runs-next.md</a>
+, <a href="/docs/how-the-engine-decides-what-runs-next/">/02-how-the-engine-decides-what-runs-next.md</a>
 , and <a href="/docs/one-execution-many-processes/">/08-one-execution-many-processes.md</a>
 .</p>
 <p>In queue mode, <code>WorkflowRunner</code> hands the job to <code>ScalingService</code> in <code>packages/cli/src/scaling/scaling.service.ts</code>. That service writes Bull jobs to Redis, wakes a worker, and later reconciles the stored execution with the job result. The worker path in <code>packages/cli/src/commands/worker.ts</code> finishes the same execution and sends streamed chunks or stored execution data back through the active execution and storage layers, so the editor can render progress and the final result from the same execution record.</p>
@@ -311,12 +316,12 @@
 				<footer id="article-footer">
 	
 		
-		<time datetime="0001-01-01">
+		<time datetime="2026-07-20">
 			<span>
 
 	<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M216-96q-29.7 0-50.85-21.5Q144-139 144-168v-528q0-29 21.15-50.5T216-768h72v-60q0-15.3 10.29-25.65Q308.58-864 323.79-864t25.71 10.35Q360-843.3 360-828v60h240v-60q0-15.3 10.29-25.65Q620.58-864 635.79-864t25.71 10.35Q672-843.3 672-828v60h72q29.7 0 50.85 21.5Q816-725 816-696v528q0 29-21.15 50.5T744-96H216Zm0-72h528v-360H216v360Zm0-432h528v-96H216v96Zm0 0v-96 96Zm264.21 216q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5ZM298.5-394.29q-10.5-10.29-10.5-25.5t10.29-25.71q10.29-10.5 25.5-10.5t25.71 10.29q10.5 10.29 10.5 25.5t-10.29 25.71q-10.29 10.5-25.5 10.5t-25.71-10.29ZM636.21-384q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5Zm-156 144q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5ZM298.5-250.29q-10.5-10.29-10.5-25.5t10.29-25.71q10.29-10.5 25.5-10.5t25.71 10.29q10.5 10.29 10.5 25.5t-10.29 25.71q-10.29 10.5-25.5 10.5t-25.71-10.29ZM636.21-240q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5Z"/></svg>
 
-</span>Updated: 0001-01-01
+</span>Updated: 2026-07-20
 		</time>
 	
 

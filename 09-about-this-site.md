@@ -4,7 +4,7 @@ This site is a concept-level field guide to the n8n codebase. It explains runtim
 
 The intended audience includes engineers who run, debug, extend, or embed n8n. It also speaks to node authors and self-hosters who need to reason about execution order, partial execution, expressions, webhooks, or workflows that keep running across process boundaries. Each page focuses on the ideas that matter when reading, discussing, or changing the system.
 
-Doc Holiday wrote this guide by exploring the n8n source repository directly. Every page stays grounded in actual code, with real file paths and symbol names, as of `[GENERATED_FROM: commit SHORT_SHA, DATE]`. The guide presents one dated snapshot of an actively developed codebase, so it treats migration-state details as observations from that date rather than permanent structure.
+Doc Holiday wrote this guide by exploring the n8n source repository directly. Every page stays grounded in actual code, with real file paths and symbol names, as of commit `26caaa876f` (2026-07-17) of [n8n-io/n8n](https://github.com/n8n-io/n8n) — the state of the code every page was written against and fact-checked with. The guide presents one dated snapshot of an actively developed codebase, so it treats migration-state details as observations from that date rather than permanent structure.
 
 The pages start with the whole platform and then narrow to the places where execution, data flow, and user code meet. That path matters because n8n behaves differently when a workflow runs normally, resumes after a pause, or crosses a process boundary. The guide names those relationships so a reader can follow the system from concept to code without losing the larger picture.
 
@@ -14,7 +14,7 @@ This guide complements the official n8n documentation and does not replace it. T
 
 n8n is fair-code licensed under the Sustainable Use License, with enterprise-licensed components in `.ee` areas of the repository. This guide is an independent companion to n8n and to any commercial offering tied to it.
 
-The codebase changes quickly, so this guide reflects a snapshot rather than a permanent description. Corrections and updates are welcome at `[CONTACT_OR_REPO_LINK]`.
+The codebase changes quickly, so this guide reflects a snapshot rather than a permanent description. Corrections and updates are welcome at [github.com/joels-sandgarden/n8n-docs](https://github.com/joels-sandgarden/n8n-docs) via issues and pull requests.
 
 That structure keeps the guide focused. It does not try to cover every file in the repository, and it does not duplicate the public product docs. Instead, it points to the pieces that explain behavior: what starts work, what decides the next step, what preserves data between runs, and where the execution model diverges from the canvas.
 

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
 
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1317&amp;path=livereload" data-no-instant defer></script>
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=65340&amp;path=livereload" data-no-instant defer></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="What this field guide is, who it is for, and how Doc Holiday generated it.">
@@ -11,7 +11,7 @@
   
 
   <title>About This Site · n8n Field Guide</title>
-  <link rel="canonical" href="http://localhost:1317/docs/about-this-site/">
+  <link rel="canonical" href="http://localhost:65340/docs/about-this-site/">
 
   
 
@@ -71,6 +71,11 @@
 		<details open>
 			<summary>The Engine</summary>
 			<ul>
+				<li>
+					<a href="/docs/how-the-engine-decides-what-runs-next/" >
+						How the Engine Decides What Runs Next
+					</a>
+				</li>
 				<li>
 					<a href="/docs/the-canvas-is-not-the-execution/" >
 						The Canvas Is Not the Execution
@@ -246,13 +251,15 @@
 				<div id="article-body">
 					<p>This site is a concept-level field guide to the n8n codebase. It explains runtime behavior, the purpose of the main subsystems, and the relationships between the pieces that cooperate during execution. The goal is a shared mental model, not a product walkthrough or an API reference.</p>
 <p>The intended audience includes engineers who run, debug, extend, or embed n8n. It also speaks to node authors and self-hosters who need to reason about execution order, partial execution, expressions, webhooks, or workflows that keep running across process boundaries. Each page focuses on the ideas that matter when reading, discussing, or changing the system.</p>
-<p>Doc Holiday wrote this guide by exploring the n8n source repository directly. Every page stays grounded in actual code, with real file paths and symbol names, as of <code>[GENERATED_FROM: commit SHORT_SHA, DATE]</code>. The guide presents one dated snapshot of an actively developed codebase, so it treats migration-state details as observations from that date rather than permanent structure.</p>
+<p>Doc Holiday wrote this guide by exploring the n8n source repository directly. Every page stays grounded in actual code, with real file paths and symbol names, as of commit <code>26caaa876f</code> (2026-07-17) of <a href="https://github.com/n8n-io/n8n" target="_blank">n8n-io/n8n</a>
+ — the state of the code every page was written against and fact-checked with. The guide presents one dated snapshot of an actively developed codebase, so it treats migration-state details as observations from that date rather than permanent structure.</p>
 <p>The pages start with the whole platform and then narrow to the places where execution, data flow, and user code meet. That path matters because n8n behaves differently when a workflow runs normally, resumes after a pause, or crosses a process boundary. The guide names those relationships so a reader can follow the system from concept to code without losing the larger picture.</p>
 <h2 id="scope">Scope</h2>
 <p>This guide complements the official n8n documentation and does not replace it. The authoritative product documentation remains at <a href="https://docs.n8n.io" target="_blank">https://docs.n8n.io</a>
 .</p>
 <p>n8n is fair-code licensed under the Sustainable Use License, with enterprise-licensed components in <code>.ee</code> areas of the repository. This guide is an independent companion to n8n and to any commercial offering tied to it.</p>
-<p>The codebase changes quickly, so this guide reflects a snapshot rather than a permanent description. Corrections and updates are welcome at <code>[CONTACT_OR_REPO_LINK]</code>.</p>
+<p>The codebase changes quickly, so this guide reflects a snapshot rather than a permanent description. Corrections and updates are welcome at <a href="https://github.com/joels-sandgarden/n8n-docs" target="_blank">github.com/joels-sandgarden/n8n-docs</a>
+ via issues and pull requests.</p>
 <p>That structure keeps the guide focused. It does not try to cover every file in the repository, and it does not duplicate the public product docs. Instead, it points to the pieces that explain behavior: what starts work, what decides the next step, what preserves data between runs, and where the execution model diverges from the canvas.</p>
 <p>Readers can use the map to move from broad concepts to the specific code paths that carry them. That keeps the site practical for debugging and extension work while still framing each topic as part of one system, instead of a list of isolated features.</p>
 <p>When a behavior changes, the guide points to the subsystem boundary that moved and the runtime consequence that follows. That lets the page explain why a change matters without turning into a file list, a product tour, or a substitute for the official docs for readers who need the mental model quickly.</p>
@@ -263,7 +270,7 @@
  — A map of the whole platform and its major moving parts.</li>
 <li><a href="/docs/anatomy-of-an-execution/">/01-anatomy-of-an-execution.md</a>
  — An end-to-end trace of one workflow execution.</li>
-<li><a href="./02-how-the-engine-decides-what-runs-next.md">/02-how-the-engine-decides-what-runs-next.md</a>
+<li><a href="/docs/how-the-engine-decides-what-runs-next/">/02-how-the-engine-decides-what-runs-next.md</a>
  — The scheduling algorithm, including the node stack, v0 and v1 ordering, joins, and dead branches.</li>
 <li><a href="/docs/the-canvas-is-not-the-execution/">/03-the-canvas-is-not-the-execution.md</a>
  — Where the visual model and the engine model disagree.</li>
@@ -284,12 +291,12 @@
 				<footer id="article-footer">
 	
 		
-		<time datetime="0001-01-01">
+		<time datetime="2026-07-20">
 			<span>
 
 	<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M216-96q-29.7 0-50.85-21.5Q144-139 144-168v-528q0-29 21.15-50.5T216-768h72v-60q0-15.3 10.29-25.65Q308.58-864 323.79-864t25.71 10.35Q360-843.3 360-828v60h240v-60q0-15.3 10.29-25.65Q620.58-864 635.79-864t25.71 10.35Q672-843.3 672-828v60h72q29.7 0 50.85 21.5Q816-725 816-696v528q0 29-21.15 50.5T744-96H216Zm0-72h528v-360H216v360Zm0-432h528v-96H216v96Zm0 0v-96 96Zm264.21 216q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5ZM298.5-394.29q-10.5-10.29-10.5-25.5t10.29-25.71q10.29-10.5 25.5-10.5t25.71 10.29q10.5 10.29 10.5 25.5t-10.29 25.71q-10.29 10.5-25.5 10.5t-25.71-10.29ZM636.21-384q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5Zm-156 144q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5ZM298.5-250.29q-10.5-10.29-10.5-25.5t10.29-25.71q10.29-10.5 25.5-10.5t25.71 10.29q10.5 10.29 10.5 25.5t-10.29 25.71q-10.29 10.5-25.5 10.5t-25.71-10.29ZM636.21-240q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5Z"/></svg>
 
-</span>Updated: 0001-01-01
+</span>Updated: 2026-07-20
 		</time>
 	
 

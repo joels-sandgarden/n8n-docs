@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
 
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1317&amp;path=livereload" data-no-instant defer></script>
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=65340&amp;path=livereload" data-no-instant defer></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="One workflow execution traced end to end, from the editor click to the canvas lighting up.">
@@ -11,7 +11,7 @@
   
 
   <title>Anatomy of an Execution · n8n Field Guide</title>
-  <link rel="canonical" href="http://localhost:1317/docs/anatomy-of-an-execution/">
+  <link rel="canonical" href="http://localhost:65340/docs/anatomy-of-an-execution/">
 
   
 
@@ -71,6 +71,11 @@
 		<details open>
 			<summary>The Engine</summary>
 			<ul>
+				<li>
+					<a href="/docs/how-the-engine-decides-what-runs-next/" >
+						How the Engine Decides What Runs Next
+					</a>
+				</li>
 				<li>
 					<a href="/docs/the-canvas-is-not-the-execution/" >
 						The Canvas Is Not the Execution
@@ -249,7 +254,7 @@
 <ul>
 <li><a href="/docs/the-big-picture/">The big picture</a>
 </li>
-<li><a href="./02-how-the-engine-decides-what-runs-next.md">How the engine decides what runs next</a>
+<li><a href="/docs/how-the-engine-decides-what-runs-next/">How the engine decides what runs next</a>
 </li>
 <li><a href="/docs/the-canvas-is-not-the-execution/">The canvas is not the execution</a>
 </li>
@@ -286,7 +291,7 @@
 <p><code>WorkflowRunner.run</code> decides whether the work stays in the main process or moves to queue mode. This page follows the in-process manual path, where <code>runMainProcess</code> prepares the workflow and then hands control to <code>ManualExecutionService.runManually</code>.</p>
 <p><code>ManualExecutionService</code> in <code>packages/cli/src/manual-execution.service.ts</code> chooses the full-run branch when the request does not carry partial run data. It builds a fresh <code>WorkflowExecute</code> instance for the ordinary manual path, and it only rewires a targeted run when a destination node points at a tool and needs <code>TOOL_EXECUTOR_NODE_NAME</code>.</p>
 <h3 id="the-engine-turns-the-run-into-state">The engine turns the run into state</h3>
-<p><code>WorkflowExecute</code> in <code>packages/core/src/execution-engine/workflow-execute.ts</code> owns the live run. Its constructor holds a single <code>IRunExecutionData</code> object, and <code>createRunExecutionData</code> in <code>packages/workflow/src/run-execution-data-factory.ts</code> fills that object with <code>startData</code>, <code>resultData</code>, <code>executionData</code>, <code>waitingExecution</code>, <code>waitingExecutionSource</code>, <code>resumeToken</code>, and the other defaults that keep the run serializable.</p>
+<p><code>WorkflowExecute</code> in <code>packages/core/src/execution-engine/workflow-execute.ts</code> owns the live run. Its constructor holds a single <code>IRunExecutionData</code> object, and <code>createRunExecutionData</code> in <code>packages/workflow/src/run-execution-data-factory.ts</code> fills that object with <code>startData</code>, <code>resultData</code>, and <code>executionData</code>, plus the optional top-level fields it sets (<code>parentExecution</code>, <code>resumeToken</code>, <code>waitTill</code>, <code>manualData</code>, <code>pushRef</code>, <code>redactionInfo</code>); <code>nodeExecutionStack</code>, <code>waitingExecution</code>, and <code>waitingExecutionSource</code> live inside <code>executionData</code> rather than beside it.</p>
 <p><code>WorkflowExecute.run</code> seeds <code>executionData.nodeExecutionStack</code> with the first node and records the initial <code>resultData.pinData</code>. That stack and result object stay together for the whole execution; the engine does not hand work off to a separate canvas model.</p>
 <h3 id="the-loop-drives-one-node-after-another">The loop drives one node after another</h3>
 <p><code>processRunExecutionData</code> starts by setting up the execution, establishing the workflow expression isolate, and checking the workflow for issues. It then loops until <code>nodeExecutionStack</code> runs dry, shifting the next <code>IExecuteData</code> entry, calculating the current run index, and stopping if the execution times out or the same node-and-run pair appears twice in a row.</p>
@@ -354,12 +359,12 @@
 				<footer id="article-footer">
 	
 		
-		<time datetime="0001-01-01">
+		<time datetime="2026-07-20">
 			<span>
 
 	<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M216-96q-29.7 0-50.85-21.5Q144-139 144-168v-528q0-29 21.15-50.5T216-768h72v-60q0-15.3 10.29-25.65Q308.58-864 323.79-864t25.71 10.35Q360-843.3 360-828v60h240v-60q0-15.3 10.29-25.65Q620.58-864 635.79-864t25.71 10.35Q672-843.3 672-828v60h72q29.7 0 50.85 21.5Q816-725 816-696v528q0 29-21.15 50.5T744-96H216Zm0-72h528v-360H216v360Zm0-432h528v-96H216v96Zm0 0v-96 96Zm264.21 216q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5ZM298.5-394.29q-10.5-10.29-10.5-25.5t10.29-25.71q10.29-10.5 25.5-10.5t25.71 10.29q10.5 10.29 10.5 25.5t-10.29 25.71q-10.29 10.5-25.5 10.5t-25.71-10.29ZM636.21-384q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5Zm-156 144q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5ZM298.5-250.29q-10.5-10.29-10.5-25.5t10.29-25.71q10.29-10.5 25.5-10.5t25.71 10.29q10.5 10.29 10.5 25.5t-10.29 25.71q-10.29 10.5-25.5 10.5t-25.71-10.29ZM636.21-240q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5Z"/></svg>
 
-</span>Updated: 0001-01-01
+</span>Updated: 2026-07-20
 		</time>
 	
 
@@ -373,7 +378,7 @@
 	<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="m438-480 164 164q11 11 11 25.5T602-265q-11 11-25.5 11T551-265L361-455q-5-5-7.5-11.5T351-480q0-7 2.5-13.5T361-505l190-190q11-11 25.5-11t25.5 11q11 11 11 25.5T602-644L438-480Z"/></svg>
 
  Previous</a>
-		<a href="/docs/the-canvas-is-not-the-execution/">Next 
+		<a href="/docs/how-the-engine-decides-what-runs-next/">Next 
 
 	<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M522-480 358-644q-11-11-11-25.5t11-25.5q11-11 25.5-11t25.5 11l190 190q5 5 7.5 11.5T609-480q0 7-2.5 13.5T599-455L409-265q-11 11-25 10.5T359-266q-11-11-11-25.5t11-25.5l163-163Z"/></svg>
 

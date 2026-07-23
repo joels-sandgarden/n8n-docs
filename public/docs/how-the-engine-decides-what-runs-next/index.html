@@ -4,14 +4,14 @@
 <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=65340&amp;path=livereload" data-no-instant defer></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Where the visual model and the engine&rsquo;s model disagree, mismatch by mismatch.">
+  <meta name="description" content="The scheduling algorithm: the node stack, v0 vs v1 ordering, joins, and dead branches.">
   <meta name="author" content="doc.holiday">
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
   
 
-  <title>The Canvas Is Not the Execution · n8n Field Guide</title>
-  <link rel="canonical" href="http://localhost:65340/docs/the-canvas-is-not-the-execution/">
+  <title>How the Engine Decides What Runs Next · n8n Field Guide</title>
+  <link rel="canonical" href="http://localhost:65340/docs/how-the-engine-decides-what-runs-next/">
 
   
 
@@ -72,12 +72,12 @@
 			<summary>The Engine</summary>
 			<ul>
 				<li>
-					<a href="/docs/how-the-engine-decides-what-runs-next/" >
+					<a href="/docs/how-the-engine-decides-what-runs-next/"  class="active" aria-current="page" >
 						How the Engine Decides What Runs Next
 					</a>
 				</li>
 				<li>
-					<a href="/docs/the-canvas-is-not-the-execution/"  class="active" aria-current="page" >
+					<a href="/docs/the-canvas-is-not-the-execution/" >
 						The Canvas Is Not the Execution
 					</a>
 				</li>
@@ -244,103 +244,52 @@
 
 
         <header id="article-header">
-          <h1 style="view-transition-name: docsthe-canvas-is-not-the-execution">The Canvas Is Not the Execution</h1>
+          <h1 style="view-transition-name: docshow-the-engine-decides-what-runs-next">How the Engine Decides What Runs Next</h1>
 					
 				</header>
 
 				<div id="article-body">
-					<p>The canvas projects <code>IWorkflowBase</code>. Execution projects <code>IRunExecutionData</code>. Those structures share node names and connections, but they answer different questions: one describes the workflow definition, the other records a specific run. The editor draws the definition, while the engine and stored execution records describe what happened. See <a href="/docs/anatomy-of-an-execution/">Anatomy of an execution</a>
- for the data shape behind that split.</p>
-<h2 id="wires-imply-order-position-decides-it">Wires imply order, position decides it</h2>
-<p>The canvas suggests that wire direction alone determines branch order. The engine does not follow that mental model. In <code>useRunWorkflow.ts</code>, <code>sortNodesByYPosition()</code> sorts the start nodes by canvas Y before the payload leaves the editor, and <code>WorkflowExecute.addNodeToBeExecuted()</code> uses the workflow&rsquo;s execution order setting to decide whether it unshifts or pushes the next node onto the stack. That makes branch order sensitive to the payload, not just to the wires on the screen.</p>
-<p>The result is easy to miss in <code>executionOrder: 'v1'</code>: moving a node vertically can change which branch runs first even when the wires stay the same. See <a href="/docs/how-the-engine-decides-what-runs-next/">How the engine decides what runs next</a>
- and the official <a href="https://docs.n8n.io/build/flow-logic/understand-execution-order" target="_blank">execution order</a>
- docs for the wider rule set.</p>
-<h2 id="one-box-many-runs">One box, many runs</h2>
-<p>The canvas shows one node box, but the runtime stores many task records for that node. <code>runData[nodeName]</code> is an array, and each entry captures one run at a specific execution index. <code>getNextExecutionIndex()</code> derives the next index from the stored run data, and <code>moveNodeMetadata()</code> merges per-run metadata back into the matching array slot. The box stays singular; the execution history does not.</p>
-<p>The editor can still summarize that history as counts because it reads stored execution data, not the canvas. <code>useRunWorkflow.ts</code> seeds local execution state with <code>createRunExecutionData({ resultData: { runData, pinData } })</code>, and <code>workflows.store.ts</code> later loads saved execution data through <code>fetchExecutionDataById()</code>. For the item level view of the same structure, see <a href="/docs/items-runs-and-paireditem/">Items, runs, and pairedItem</a>
+					<p>This page explains the live scheduler inside <code>WorkflowExecute</code>. It gives a new engineer enough of a model to predict execution order from the code without reading the whole engine first. The official summary lives at <a href="https://docs.n8n.io/build/flow-logic/understand-execution-order" target="_blank">Understand execution order</a>
+, and this page expands the machine underneath it.</p>
+<p>For the broader trace of an execution, see <a href="/docs/anatomy-of-an-execution/">Anatomy of an execution</a>
+. When <code>processRunExecutionData</code> starts, the normal path has already seeded the stack in <code>WorkflowExecute.run</code>; partial executions rebuild that stack first, which is why <a href="/docs/partial-executions-and-dirty-nodes/">Partial executions and dirty nodes</a>
+ sits next to this page.</p>
+<h2 id="the-work-list">The work list</h2>
+<p><code>executionData.nodeExecutionStack</code> is the only work list the live loop needs. Each entry carries the node, the data that node should receive, and the source lineage that explains where the data came from. The loop always consumes from the front with <code>shift()</code>, so the execution order depends on where the scheduler adds new entries.</p>
+
+
+
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ts" data-lang="ts"><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">enqueueFn</span> <span class="o">=</span> <span class="nx">workflow</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">executionOrder</span> <span class="o">===</span> <span class="s1">&#39;v1&#39;</span> <span class="o">?</span> <span class="s1">&#39;unshift&#39;</span> <span class="o">:</span> <span class="s1">&#39;push&#39;</span><span class="p">;</span></span></span></code></pre></div><p>That single choice separates the two scheduling modes. <code>push</code> leaves new work at the tail, so older work runs first and the walk feels breadth-first. <code>unshift</code> puts new work at the front, so the current branch keeps running and the walk feels depth-first. The setting only changes scheduling. <code>executionOrder: 'v0' | 'v1'</code> names the node-ordering setting, and it does not match <code>IRunExecutionData.version</code> in <code>packages/workflow/src/run-execution-data/</code>.</p>
+<h2 id="sibling-order-follows-the-canvas-but-only-for-siblings">Sibling order follows the canvas, but only for siblings</h2>
+<p>When one node fans out to several children, v1 collects the children, sorts them by canvas position, and then enqueues them. The node closest to the top left runs first. That detail helps predict sibling order, but it does not turn the canvas into the execution graph; the canvas only shapes the order among ready siblings. See <a href="/docs/the-canvas-is-not-the-execution/">The canvas is not the execution</a>
+ for the difference between layout and runtime behavior.</p>
+<h2 id="joins-wait-until-enough-inputs-arrive">Joins wait until enough inputs arrive</h2>
+<p>A node with more than one input does not run as soon as one branch reaches it. <code>addNodeToBeExecuted</code> parks partial data in <code>waitingExecution</code> and <code>waitingExecutionSource</code> until the node has enough inputs to make sense of the run. The source map preserves lineage, which is why <a href="/docs/items-runs-and-paireditem/">Items, runs, and pairedItem</a>
+ matters when the downstream node needs to explain which item came from which parent.</p>
+<p>The loop also gives waiting nodes a second chance after the main stack runs empty. That sweep pulls forward any node that now has enough input data, even if some other inputs stayed empty. That means a join can still complete after one branch dies early, while a node that still lacks required inputs stays parked. When a node expresses required inputs as a value, the scheduler resolves it before this sweep decides whether the node can run; see <a href="/docs/expressions-and-user-code/">Expressions and user code</a>
 .</p>
-<h2 id="one-run-many-items--usually">One run, many items — usually</h2>
-<p>Most nodes process a set of items in a single run. The engine does not treat each item as a separate run by default. <code>WorkflowExecute.handleExecuteOnce()</code> narrows <code>executeOnce</code> nodes to the first item, and <code>prepareConnectionInputData()</code> chooses the input shape that the node actually receives. The Code node reference documents the related run-once modes, which change how the node groups or reuses items. See the official <a href="https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.code/" target="_blank">Code node reference</a>
+<h2 id="empty-output-ends-a-branch-unless-the-node-chooses-otherwise">Empty output ends a branch unless the node chooses otherwise</h2>
+<p>If a node returns no data and does not enter waiting state, the branch ends there and the scheduler does not add downstream work. <code>alwaysOutputData</code> changes that outcome by fabricating a single empty item, which keeps the branch alive long enough for downstream nodes to run. Legacy <code>v0</code> keeps one more compatibility path: it can still wake a downstream node connected via a second or later main input even when the upstream output is empty.</p>
+<h2 id="cycles-rely-on-node-state-not-special-graph-logic">Cycles rely on node state, not special graph logic</h2>
+<p>The scheduler does not treat a cycle as a separate execution mode. It keeps taking work from the front of the same list, and a node can only loop if it schedules more work for itself. <code>SplitInBatchesV3</code> shows the pattern: it stores loop state in <code>getContext('node')</code>, returns the next batch on the <code>loop</code> output, and finishes on <code>done</code>. The loop guard in <code>processRunExecutionData</code> stops accidental repeats when the same node and run index come back without progress. Queue mode keeps the same ordering rules after work moves between processes; see <a href="/docs/one-execution-many-processes/">One execution, many processes</a>
 .</p>
-<p>The important point stays simple: the canvas shows a node, but the runtime decides item granularity. A node can consume many items, only one item, or a shaped subset of the input, depending on the node implementation and its execution mode.</p>
-<h2 id="the-loop-that-isnt">The loop that isn’t</h2>
-<p>The canvas can suggest a plain loop. <code>SplitInBatches</code> does not behave like a language loop. <code>findStartNodes()</code> treats <code>n8n-nodes-base.splitInBatches</code> specially by checking the last run&rsquo;s <code>done</code> output, and <code>recreateNodeExecutionStack()</code> rebuilds waiting execution state from stored <code>IRunData</code> and pinned data. That makes the next pass depend on saved execution state, not on a loop construct in the canvas.</p>
-<p>This is why <code>SplitInBatches</code> feels stateful across successive runs. The visual pattern points to repetition, but the engine advances by resuming stored state. See <a href="/docs/items-runs-and-paireditem/">Items, runs, and pairedItem</a>
- for the item history that makes that resumption possible.</p>
-<h2 id="disabled-is-not-deleted">Disabled is not deleted</h2>
-<p>A disabled node still exists in the workflow definition. The engine only changes how it treats that node. In a full run, <code>WorkflowExecute.handleDisabledNode()</code> passes through the first main input so downstream data can keep flowing. In a partial run, <code>filterDisabledNodes()</code> removes disabled nodes from the graph and reconnects the main connections before <code>findSubgraph()</code> and <code>recreateNodeExecutionStack()</code> rebuild the execution path.</p>
-<p>That split matters because the same disabled node can behave like a passthrough in a full run and like a removed vertex in a partial run. See <a href="/docs/partial-executions-and-dirty-nodes/">Partial executions and dirty nodes</a>
- and the official <a href="https://docs.n8n.io/build/understand-workflows/understand-executions/understand-dirty-nodes" target="_blank">dirty nodes</a>
- docs.</p>
-<h2 id="pinned-nodes-never-run">Pinned nodes never run</h2>
-<p>Pins look like saved node output, and the main execution loop in <code>processRunExecutionData()</code> substitutes <code>pinData</code> for execution data when a pin exists for that node, skipping <code>runNode()</code> entirely. In that path the node&rsquo;s code does not run; the editor can still seed local playback with <code>pinData</code> through <code>useRunWorkflow.ts</code>, and <code>workflows.store.ts</code> later reads stored execution data back for display. The official <a href="https://docs.n8n.io/build/understand-workflows/understand-executions/types-of-executions" target="_blank">execution types</a>
- docs explain why that replay behavior stays separate from production runs.</p>
-<h2 id="execute-this-node-is-not-execute-one-node">“Execute this node” is not “execute one node”</h2>
-<p>A targeted run does more than start one box. <code>consolidateRunDataAndStartNodes()</code> walks backward from the destination, keeps the reusable run data, and marks the nodes that must run again. On the backend, <code>runPartialWorkflow2()</code> then filters disabled nodes, finds the subgraph, cleans the run data, finds start nodes, and recreates the execution stack before execution begins. See <a href="/docs/partial-executions-and-dirty-nodes/">Partial executions and dirty nodes</a>
- for the dirty chain model behind that behavior.</p>
-<p>The practical rule stays narrow: the editor decides which chain needs replay, and the backend rebuilds that chain from stored data. The target node only looks like the whole story.</p>
-<h2 id="branches-can-die-silently">Branches can die silently</h2>
-<p>The canvas does not show a special state for a branch that receives no items. The engine simply stops enqueueing downstream work when the input stays empty. <code>incomingConnectionIsEmpty()</code> checks whether a connection has any data, and <code>addNodeToBeExecuted()</code> skips the downstream node when the output array is empty. The branch ends because no data arrives, not because the canvas raises a separate skipped marker.</p>
-<p>That silence often looks like a missing wire event from the outside. In reality, the runtime just has nothing to pass forward.</p>
-<h2 id="the-canvas-does-not-run-anything">The canvas does not run anything</h2>
-<p>The editor does not compute node status, item counts, or errors on its own. <code>pushConnection.store.ts</code> receives websocket or event source messages and dispatches them to handlers, and <code>useRunWorkflow.ts</code> turns the returned execution data into local editor state. When the editor needs a finished execution, <code>workflows.store.ts</code> loads the stored execution record and the UI replays that data back onto the canvas.</p>
-<p>What appears on the canvas comes from <code>resultData</code> and execution data, not from a second computation path in the editor.</p>
-<h2 id="summary">Summary</h2>
-<table>
-	<thead>
-			<tr>
-					<th>Mismatch</th>
-					<th>Rule of thumb</th>
-			</tr>
-	</thead>
-	<tbody>
-			<tr>
-					<td>Wires imply order, position decides it</td>
-					<td>Read branch order from the engine stack and the sorted start-node payload, not from wire layout alone.</td>
-			</tr>
-			<tr>
-					<td>One box, many runs</td>
-					<td>Treat <code>runData[nodeName]</code> as a run history, one array entry per run.</td>
-			</tr>
-			<tr>
-					<td>One run, many items — usually</td>
-					<td>Expect item arrays, but remember <code>executeOnce</code> and node run-once modes can narrow them.</td>
-			</tr>
-			<tr>
-					<td>The loop that isn’t</td>
-					<td>Treat <code>SplitInBatches</code> as stateful handoff across runs, not as a language loop.</td>
-			</tr>
-			<tr>
-					<td>Disabled is not deleted</td>
-					<td>Expect full runs to pass data through and partial runs to strip disabled nodes.</td>
-			</tr>
-			<tr>
-					<td>Pinned nodes never run</td>
-					<td>Treat pins as editor replay data, not as production input.</td>
-			</tr>
-			<tr>
-					<td>“Execute this node” is not “execute one node”</td>
-					<td>Expect the editor and backend to rebuild the dirty chain and reuse stored run data.</td>
-			</tr>
-			<tr>
-					<td>Branches can die silently</td>
-					<td>A branch ends when it receives no items; the canvas does not invent a special skipped state.</td>
-			</tr>
-			<tr>
-					<td>The canvas does not run anything</td>
-					<td>Treat the editor as a renderer for server execution data, not as the executor.</td>
-			</tr>
-	</tbody>
-</table>
+<h2 id="retries-and-error-routing-stay-inside-the-same-scheduler">Retries and error routing stay inside the same scheduler</h2>
+<p><code>retryOnFail</code> does not change how the engine chooses the next node. It only gives the current node more than one attempt, with a bounded try count and an optional pause between tries. If the node continues on fail, the engine keeps the branch alive and can pass through regular data or an error output. If the node does not continue on fail, the scheduler requeues the same execution entry on the work list and the branch stops from there.</p>
+<h2 id="one-loop-iteration">One loop iteration</h2>
+<pre class="mermaid">flowchart TD
+  A[&#34;Take front entry&#34;] --&gt; B[&#34;Run node&#34;]
+  B --&gt; C{&#34;Output empty&#34;}
+  C --&gt;|Yes| D[&#34;Branch ends&#34;]
+  C --&gt;|No| E{&#34;Needs waiting&#34;}
+  E --&gt;|Yes| F[&#34;Park partial inputs&#34;]
+  E --&gt;|No| G[&#34;Enqueue ordered children&#34;]</pre>
 <h2 id="where-to-look-in-the-code">Where to look in the code</h2>
 <ul>
-<li><code>packages/core/src/execution-engine/workflow-execute.ts</code> — full and partial execution, disabled node passthrough, item shaping, and run data bookkeeping.</li>
-<li><code>packages/core/src/execution-engine/partial-execution-utils/filter-disabled-nodes.ts</code>, <code>find-start-nodes.ts</code>, <code>recreate-node-execution-stack.ts</code>, <code>run-data-utils.ts</code> — partial-run graph cleanup, start-node discovery, stack rebuilding, and execution index tracking.</li>
-<li><code>packages/frontend/editor-ui/src/app/composables/useRunWorkflow.ts</code> — editor-side payload assembly, start-node sorting, and local execution playback.</li>
-<li><code>packages/frontend/editor-ui/src/app/stores/workflows.store.ts</code> — run requests and stored execution fetches.</li>
-<li><code>packages/frontend/editor-ui/src/app/stores/pushConnection.store.ts</code> — push-message transport for execution updates.</li>
-<li><code>packages/core/src/execution-engine/partial-execution-utils/directed-graph.ts</code> — graph rewiring used by partial execution.</li>
+<li><code>packages/core/src/execution-engine/workflow-execute.ts</code> — live scheduling, the work list, joins, retries, and the waiting-node sweep.</li>
+<li><code>packages/core/src/execution-engine/partial-execution-utils/handle-cycles.ts</code> — cycle handling when a partial execution resumes.</li>
+<li><code>packages/core/src/execution-engine/partial-execution-utils/recreate-node-execution-stack.ts</code> — stack reconstruction for resumed runs.</li>
+<li><code>packages/nodes-base/nodes/SplitInBatches/v3/SplitInBatchesV3.node.ts</code> — a loop node example that stores state across runs.</li>
+<li><code>packages/workflow/src/run-execution-data/run-execution-data.v0.ts</code> and <code>packages/workflow/src/run-execution-data/run-execution-data.v1.ts</code> — the run-data versions that stay separate from execution order.</li>
 </ul>
 
 				</div>
@@ -348,12 +297,12 @@
 				<footer id="article-footer">
 	
 		
-		<time datetime="2026-07-20">
+		<time datetime="0001-01-01">
 			<span>
 
 	<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M216-96q-29.7 0-50.85-21.5Q144-139 144-168v-528q0-29 21.15-50.5T216-768h72v-60q0-15.3 10.29-25.65Q308.58-864 323.79-864t25.71 10.35Q360-843.3 360-828v60h240v-60q0-15.3 10.29-25.65Q620.58-864 635.79-864t25.71 10.35Q672-843.3 672-828v60h72q29.7 0 50.85 21.5Q816-725 816-696v528q0 29-21.15 50.5T744-96H216Zm0-72h528v-360H216v360Zm0-432h528v-96H216v96Zm0 0v-96 96Zm264.21 216q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5ZM298.5-394.29q-10.5-10.29-10.5-25.5t10.29-25.71q10.29-10.5 25.5-10.5t25.71 10.29q10.5 10.29 10.5 25.5t-10.29 25.71q-10.29 10.5-25.5 10.5t-25.71-10.29ZM636.21-384q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5Zm-156 144q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5ZM298.5-250.29q-10.5-10.29-10.5-25.5t10.29-25.71q10.29-10.5 25.5-10.5t25.71 10.29q10.5 10.29 10.5 25.5t-10.29 25.71q-10.29 10.5-25.5 10.5t-25.71-10.29ZM636.21-240q-15.21 0-25.71-10.29t-10.5-25.5q0-15.21 10.29-25.71t25.5-10.5q15.21 0 25.71 10.29t10.5 25.5q0 15.21-10.29 25.71t-25.5 10.5Z"/></svg>
 
-</span>Updated: 2026-07-20
+</span>Updated: 0001-01-01
 		</time>
 	
 
@@ -362,17 +311,47 @@
 		
 			
 			
-			<a href="/docs/how-the-engine-decides-what-runs-next/">
+			<a href="/docs/anatomy-of-an-execution/">
 
 	<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="m438-480 164 164q11 11 11 25.5T602-265q-11 11-25.5 11T551-265L361-455q-5-5-7.5-11.5T351-480q0-7 2.5-13.5T361-505l190-190q11-11 25.5-11t25.5 11q11 11 11 25.5T602-644L438-480Z"/></svg>
 
  Previous</a>
-		<a href="/docs/partial-executions-and-dirty-nodes/">Next 
+		<a href="/docs/the-canvas-is-not-the-execution/">Next 
 
 	<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"><path d="M522-480 358-644q-11-11-11-25.5t11-25.5q11-11 25.5-11t25.5 11l190 190q5 5 7.5 11.5T609-480q0 7-2.5 13.5T599-455L409-265q-11 11-25 10.5T359-266q-11-11-11-25.5t11-25.5l163-163Z"/></svg>
 
 </a>
 		</footer>
+<style>
+  pre.mermaid { background: none; border: 0; padding: 0; text-align: center; }
+  pre.mermaid:not([data-processed]) { visibility: hidden; }
+</style>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  const nodes = document.querySelectorAll('pre.mermaid');
+  
+  nodes.forEach((n) => { n.dataset.graph = n.textContent; });
+
+  const render = () => {
+    const dark = document.documentElement.getAttribute('data-color') === 'dark';
+    mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'default' });
+    nodes.forEach((n) => {
+      n.removeAttribute('data-processed');
+      n.innerHTML = n.dataset.graph;
+    });
+    mermaid.run({ nodes });
+  };
+
+  render();
+
+  
+  new MutationObserver(render).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-color'],
+  });
+</script>
+
 
 			</article>
 
@@ -391,16 +370,13 @@
 
 	<nav id="TableOfContents">
   <ul>
-    <li><a href="#wires-imply-order-position-decides-it">Wires imply order, position decides it</a></li>
-    <li><a href="#one-box-many-runs">One box, many runs</a></li>
-    <li><a href="#one-run-many-items--usually">One run, many items — usually</a></li>
-    <li><a href="#the-loop-that-isnt">The loop that isn’t</a></li>
-    <li><a href="#disabled-is-not-deleted">Disabled is not deleted</a></li>
-    <li><a href="#pinned-nodes-never-run">Pinned nodes never run</a></li>
-    <li><a href="#execute-this-node-is-not-execute-one-node">“Execute this node” is not “execute one node”</a></li>
-    <li><a href="#branches-can-die-silently">Branches can die silently</a></li>
-    <li><a href="#the-canvas-does-not-run-anything">The canvas does not run anything</a></li>
-    <li><a href="#summary">Summary</a></li>
+    <li><a href="#the-work-list">The work list</a></li>
+    <li><a href="#sibling-order-follows-the-canvas-but-only-for-siblings">Sibling order follows the canvas, but only for siblings</a></li>
+    <li><a href="#joins-wait-until-enough-inputs-arrive">Joins wait until enough inputs arrive</a></li>
+    <li><a href="#empty-output-ends-a-branch-unless-the-node-chooses-otherwise">Empty output ends a branch unless the node chooses otherwise</a></li>
+    <li><a href="#cycles-rely-on-node-state-not-special-graph-logic">Cycles rely on node state, not special graph logic</a></li>
+    <li><a href="#retries-and-error-routing-stay-inside-the-same-scheduler">Retries and error routing stay inside the same scheduler</a></li>
+    <li><a href="#one-loop-iteration">One loop iteration</a></li>
     <li><a href="#where-to-look-in-the-code">Where to look in the code</a></li>
   </ul>
 </nav>
