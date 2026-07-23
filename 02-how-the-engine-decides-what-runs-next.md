@@ -2,7 +2,7 @@
 
 This page explains the live scheduler inside `WorkflowExecute`. It gives a new engineer enough of a model to predict execution order from the code without reading the whole engine first. The official summary lives at [Understand execution order](https://docs.n8n.io/build/flow-logic/understand-execution-order), and this page expands the machine underneath it.
 
-For the broader trace of an execution, see [Anatomy of an execution](/01-anatomy-of-an-execution.md). When `processRunExecutionData` starts, it uses a stack that partial execution code has already rebuilt, which is why [Partial executions and dirty nodes](/04-partial-executions-and-dirty-nodes.md) sits next to this page.
+For the broader trace of an execution, see [Anatomy of an execution](/01-anatomy-of-an-execution.md). When `processRunExecutionData` starts, the normal path has already seeded the stack in `WorkflowExecute.run`; partial executions rebuild that stack first, which is why [Partial executions and dirty nodes](/04-partial-executions-and-dirty-nodes.md) sits next to this page.
 
 ## The work list
 
@@ -26,7 +26,7 @@ The loop also gives waiting nodes a second chance after the main stack runs empt
 
 ## Empty output ends a branch unless the node chooses otherwise
 
-If a node returns no data and does not enter waiting state, the branch ends there and the scheduler does not add downstream work. `alwaysOutputData` changes that outcome by fabricating a single empty item, which keeps the branch alive long enough for downstream nodes to run. Legacy `v0` keeps one more compatibility path: it can still wake certain downstream nodes on non-main inputs even when the upstream output is empty.
+If a node returns no data and does not enter waiting state, the branch ends there and the scheduler does not add downstream work. `alwaysOutputData` changes that outcome by fabricating a single empty item, which keeps the branch alive long enough for downstream nodes to run. Legacy `v0` keeps one more compatibility path: it can still wake a downstream node connected via a second or later main input even when the upstream output is empty.
 
 ## Cycles rely on node state, not special graph logic
 
